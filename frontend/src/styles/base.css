@@ -1,22 +1,20 @@
 :root {
-  font-family:
-    Inter,
-    ui-sans-serif,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
+  --font:
+    "Noto Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  color: #e5e7e1;
-  background: #171b1c;
+  --bg: #161616;
+  --panel: #1e1e1e;
+  --raised: #292929;
+  --line: #414141;
+  --muted: #aaa9a3;
+  --accent: #dfac68;
+  --ink: #dcdcd2;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--bg);
+  color-scheme: dark;
   font-synthesis: none;
-  --bg: #171b1c;
-  --panel: #1e2425;
-  --raised: #252c2d;
-  --line: #343c3d;
-  --muted: #98a4a3;
-  --accent: #c6d6a4;
-  --ink: #e5e7e1;
-  --serif: Georgia, "Times New Roman", serif;
+  font-size: 14px;
 }
 * {
   box-sizing: border-box;
@@ -39,6 +37,7 @@ select {
 }
 button {
   cursor: pointer;
+  color: inherit;
 }
 button:disabled {
   cursor: default;
@@ -56,11 +55,8 @@ select:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
-button {
-  color: inherit;
-}
 p {
-  line-height: 1.65;
+  line-height: 1.6;
 }
 h1,
 h2,
@@ -70,31 +66,34 @@ p {
   margin-top: 0;
 }
 h1,
-h2 {
-  font-family: var(--serif);
-  font-weight: 400;
-  letter-spacing: -0.035em;
+h2,
+h3,
+h4 {
+  font-family: var(--font);
+  letter-spacing: normal;
+  font-weight: 600;
 }
 h1 {
-  font-size: 43px;
-  margin-bottom: 13px;
+  font-size: 26px;
+  margin-bottom: 8px;
 }
 h2 {
-  font-size: 27px;
+  font-size: 20px;
   margin-bottom: 12px;
 }
 h3 {
   font-size: 15px;
-  font-weight: 550;
 }
 h4 {
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-size: 11px;
   color: var(--muted);
-  font-weight: 600;
   margin: 26px 0 13px;
 }
 small {
   font-size: 11px;
   line-height: 1.55;
+}
+.solid-icon {
+  flex-shrink: 0;
+  vertical-align: middle;
 }

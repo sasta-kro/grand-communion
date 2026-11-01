@@ -9,23 +9,25 @@
   align-items: center;
   justify-content: space-between;
   gap: 15px;
-  padding: 23px 27px 20px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
+  background: #1b1b1b;
 }
 .scene-header h1 {
-  font-size: 29px;
-  margin: 9px 0 11px;
+  font-size: 24px;
+  margin: 8px 0 10px;
+  font-weight: 650;
 }
 .back {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #93a297;
-  font-size: 10px;
+  color: var(--muted);
+  font-size: 11px;
 }
 .scene-header .quiet {
-  font-size: 10px;
+  font-size: 11px;
 }
 .scene-actions {
   display: flex;
@@ -33,7 +35,7 @@
   gap: 7px;
 }
 .scene-actions .button {
-  font-size: 10px;
+  font-size: 11px;
   padding: 8px 10px;
 }
 .scene-layout {
@@ -48,11 +50,11 @@
   border-right: 1px solid var(--line);
   padding: 23px 16px;
   overflow: auto;
-  background: #181f1f;
+  background: #191919;
 }
 .roster > div > h3 {
-  font-size: 11px;
-  margin-bottom: 20px;
+  font-size: 13px;
+  margin-bottom: 16px;
 }
 .roster .row .quiet {
   margin-bottom: 20px;
@@ -66,21 +68,21 @@
   background: none;
   border: 0;
   text-align: left;
-  border-bottom: 1px solid #2c3533;
+  border-bottom: 1px solid #343434;
 }
 .character-row > span:nth-child(2) {
   flex: 1;
   min-width: 0;
 }
 .character-row strong {
-  font-size: 12px;
+  font-size: 13px;
   display: block;
-  font-weight: 500;
+  font-weight: 650;
 }
 .character-row small {
   display: block;
-  font-size: 9px;
-  color: #86968f;
+  font-size: 10px;
+  color: var(--muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -88,18 +90,18 @@
 }
 .character-row em {
   display: block;
-  font-size: 9px;
+  font-size: 10px;
   font-style: normal;
-  color: #afc29e;
+  color: var(--muted);
   margin-top: 5px;
 }
 .character-row > svg {
-  color: #67796b;
+  color: var(--muted);
 }
 .roster-note {
   display: flex;
   gap: 8px;
-  color: #829481;
+  color: var(--muted);
   padding-top: 23px;
 }
 .roster-note svg {
@@ -107,8 +109,8 @@
   margin-top: 3px;
 }
 .roster-note p {
-  font-size: 10px;
-  line-height: 1.8;
+  font-size: 11px;
+  line-height: 1.6;
 }
 .scene-premise {
   margin-top: 28px;
@@ -116,13 +118,13 @@
   padding-top: 24px;
 }
 .scene-premise .eyebrow {
-  font-size: 8px;
-  color: #8f9e89;
+  font-size: 10px;
+  color: var(--muted);
 }
 .scene-premise p {
-  font-size: 10px;
-  color: #8b9990;
-  line-height: 1.95;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.65;
   margin-top: 12px;
 }
 .conversation {
@@ -131,48 +133,50 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  background: #1b2121;
+  background: #181818;
 }
 .transcript-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 13px 25px;
-  border-bottom: 1px solid #2b3432;
+  padding: 10px 24px;
+  border-bottom: 1px solid #393939;
   flex-shrink: 0;
+  background: #1d1d1d;
 }
 .transcript-toolbar > span {
-  font-size: 8px;
-  letter-spacing: 0.13em;
-  color: #7c8c83;
+  font-size: 10px;
+  letter-spacing: normal;
+  color: var(--muted);
 }
 .transcript-toolbar label {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #72867a;
+  color: var(--muted);
 }
 .transcript-toolbar input {
   border: 0;
   background: none;
-  font-size: 10px;
+  font-size: 12px;
   padding: 5px;
   width: 135px;
   outline: none;
+  color: var(--ink);
 }
 .transcript {
   flex: 1;
   overflow: auto;
-  padding: 8px 28px 35px;
+  padding: 8px 24px 28px;
   scroll-behavior: smooth;
   min-height: 100px;
 }
 .message {
   display: flex;
-  gap: 14px;
-  padding: 22px 0;
-  border-bottom: 1px solid #2c3431;
+  gap: 15px;
+  padding: 20px 0;
+  border-bottom: 1px solid #333;
   scroll-margin-top: 30px;
 }
 .message:last-child {
@@ -180,9 +184,9 @@
 }
 .message .avatar {
   margin-top: 2px;
-  width: 31px;
-  height: 31px;
-  font-size: 9px;
+  width: 43px;
+  height: 43px;
+  font-size: 11px;
 }
 .message-content {
   flex: 1;
@@ -192,40 +196,41 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   font-size: 11px;
 }
 .message-header strong {
-  font-weight: 550;
-  color: #d9e0d4;
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
 }
 .message-header time {
-  font-size: 9px;
-  color: #76877c;
+  font-size: 11px;
+  color: var(--muted);
 }
 .message-number {
-  font-size: 8px;
-  color: #65746b;
+  font-size: 10px;
+  color: #999;
 }
 .message-header small {
-  font-size: 8px;
-  color: #8b9a87;
+  font-size: 10px;
+  color: var(--muted);
 }
 .message-content > p {
-  font-size: 13px;
-  line-height: 1.9;
+  font-size: 16px;
+  line-height: 1.75;
   margin: 0;
-  color: #cbd4c6;
+  color: var(--ink);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .reply-link {
   margin-left: auto;
   opacity: 0;
-  font-size: 9px;
+  font-size: 11px;
   border: 0;
   background: none;
-  color: #b5c89e;
+  color: var(--accent);
   padding: 2px;
 }
 .message:hover .reply-link,
@@ -233,22 +238,22 @@
   opacity: 1;
 }
 .reply-ref {
-  font-size: 9px;
+  font-size: 11px;
   background: none;
   border: 0;
-  color: #aab99c;
+  color: #c3b2cf;
   padding: 3px 0 8px;
 }
 .address {
-  font-size: 9px;
-  color: #91a588;
+  font-size: 11px;
+  color: var(--muted);
   margin-bottom: 8px;
 }
 .text-button {
   background: none;
   border: 0;
   padding: 8px 0;
-  font-size: 9px;
+  font-size: 11px;
 }
 .empty-scene {
   height: 100%;
@@ -258,22 +263,22 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #788e7a;
+  color: var(--muted);
 }
 .empty-scene h2 {
-  font-size: 29px;
-  color: #c8d4be;
+  font-size: 21px;
+  color: var(--ink);
   margin: 22px 0 10px;
 }
 .empty-scene p {
-  font-size: 12px;
+  font-size: 13px;
   max-width: 360px;
-  color: #8e9e90;
+  color: var(--muted);
 }
 .composer {
   border-top: 1px solid var(--line);
-  padding: 14px 22px 13px;
-  background: #1a2120;
+  padding: 12px 22px;
+  background: #202020;
   flex-shrink: 0;
 }
 .composer-options {
@@ -285,15 +290,15 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #83977e;
-  font-size: 9px;
+  color: var(--muted);
+  font-size: 11px;
 }
 .composer-options select {
   border: 0;
   padding: 5px;
   background: none;
-  color: #b4c5a7;
-  font-size: 10px;
+  color: var(--ink);
+  font-size: 12px;
   max-width: 180px;
 }
 .compose-input {
@@ -303,30 +308,31 @@
   margin: 7px 0 5px;
 }
 .compose-input textarea {
-  border: 0;
-  background: none;
-  padding: 8px 0;
+  border: 1px solid #505050;
+  background: #131313;
+  padding: 10px 12px;
   resize: none;
   min-height: 50px;
   max-height: 160px;
   flex: 1;
-  font-size: 12px;
+  font-size: 14px;
   outline: none;
+  border-radius: 6px;
 }
 .send {
-  background: #c6d6a4;
-  border: 0;
+  background: #303030;
+  border: 1px solid #626262;
   display: grid;
   place-items: center;
-  width: 33px;
-  height: 33px;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
-  border-radius: 4px;
-  color: #243021;
+  border-radius: 6px;
+  color: var(--ink);
 }
 .composer > small {
-  font-size: 8px;
-  color: #63776a;
+  font-size: 10px;
+  color: var(--muted);
 }
 .composer > input {
   width: 100%;
@@ -337,8 +343,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 10px;
-  color: #b0c294;
+  font-size: 11px;
+  color: var(--accent);
   padding: 4px 0 10px;
 }
 .jump {
@@ -349,15 +355,33 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #37462f;
-  color: #e3ebd8;
-  border: 1px solid #83966c;
-  border-radius: 20px;
+  background: #35302a;
+  color: var(--ink);
+  border: 1px solid #9c7d52;
+  border-radius: 6px;
   padding: 9px 15px;
-  font-size: 10px;
+  font-size: 12px;
   box-shadow: 0 5px 20px #0005;
 }
 .older {
   margin: 15px auto;
   display: flex;
+}
+.character-row:hover {
+  background: #252525;
+}
+.avatar-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  align-self: flex-start;
+}
+.message .avatar > svg {
+  width: 37px;
+  height: 40px;
+}
+.send:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
 }

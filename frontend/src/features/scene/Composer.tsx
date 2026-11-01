@@ -1,4 +1,5 @@
-import { Send, X } from "lucide-react";
+import { X } from "lucide-react";
+import { Icon } from "../../components/Icon";
 import { Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
 
@@ -21,7 +22,6 @@ export function Composer({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {" "}
       <div className="composer">
         {reply && (
           <div className="replying">
@@ -75,7 +75,7 @@ export function Composer({ model }: { model: SceneModel }) {
         {identity === "custom" && (
           <input
             aria-label="Custom voice name"
-            placeholder="Name of the voice"
+            placeholder="Speaker name"
             value={custom}
             onChange={(e) => setCustom(e.target.value)}
           />
@@ -83,7 +83,7 @@ export function Composer({ model }: { model: SceneModel }) {
         <div className="compose-input">
           <textarea
             aria-label="Your contribution"
-            placeholder="A voice from within the world..."
+            placeholder="Type a message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
@@ -99,12 +99,10 @@ export function Composer({ model }: { model: SceneModel }) {
             disabled={sending || !text.trim()}
             onClick={send}
           >
-            <Send size={18} />
+            <Icon name="send" size={21} />
           </button>
         </div>
-        <small>
-          Your external identity is never included in the characters' context.
-        </small>
+        <small>Only the selected speaker is shown to characters.</small>
       </div>
     </>
   );

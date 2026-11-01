@@ -1,5 +1,5 @@
 import { ChevronRight, Eye, Plus } from "lucide-react";
-import { color, initials } from "../../lib/format";
+import { Avatar } from "../../components/Avatar";
 import { Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
 
@@ -8,10 +8,9 @@ export function CharacterRoster({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {" "}
       <aside className="roster">
         <div className="row between">
-          <h3>In this scene</h3>
+          <h3>Characters</h3>
           <button className="icon" title="Add character" onClick={newCharacter}>
             <Plus size={14} />
           </button>
@@ -28,9 +27,7 @@ export function CharacterRoster({ model }: { model: SceneModel }) {
               key={c.id}
               onClick={() => setEdit({ ...c })}
             >
-              <span className={"avatar " + color(c.name)}>
-                {initials(c.name)}
-              </span>
+              <Avatar name={c.name} />
               <span>
                 <strong>{c.name}</strong>
                 <small>{c.role}</small>
@@ -54,7 +51,7 @@ export function CharacterRoster({ model }: { model: SceneModel }) {
           </p>
         </div>
         <div className="scene-premise">
-          <span className="eyebrow">THE SETTING</span>
+          <span className="eyebrow">SETTING</span>
           <p>{scene.scenario.premise}</p>
         </div>
       </aside>

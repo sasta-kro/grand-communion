@@ -3,7 +3,7 @@ import type { SettingsSectionProps } from "./types";
 export function MemorySettings({ form, set }: SettingsSectionProps) {
   return (
     <>
-      <h2>Keep the person, not every word.</h2>
+      <h2>Context and memory</h2>
       <p>
         The full transcript remains on disk. Each character retains a private
         first-person memory and a recent observation tail.

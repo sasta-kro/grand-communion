@@ -21,10 +21,9 @@ export function SaveDialog({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {" "}
       {saveOpen && (
         <Modal
-          title="Save this world"
+          title="Session saves"
           subtitle="History, character memories, and settings. Credentials stay on this machine."
           onClose={() => setSaveOpen(false)}
         >

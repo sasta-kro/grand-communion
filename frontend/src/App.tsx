@@ -62,7 +62,7 @@ export function App() {
       <div className="loading">
         <Compass size={38} />
         <h1>Communion</h1>
-        <p>{error || "Opening your worlds..."}</p>
+        <p>{error || "Loading Communion..."}</p>
         {error && <Button onClick={refresh}>Retry</Button>}
       </div>
     );

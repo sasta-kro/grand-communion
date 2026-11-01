@@ -4,7 +4,7 @@ import type { SettingsSectionProps } from "./types";
 export function NarratorSettings({ boot, form, set }: SettingsSectionProps) {
   return (
     <>
-      <h2>A chronicle of what you missed.</h2>
+      <h2>Narrator recaps</h2>
       <p>
         The narrator observes. Its reports never become dialogue or character
         memory.

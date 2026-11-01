@@ -10,8 +10,8 @@ export function Personas({ boot, refresh, fail, notify }: PageProps) {
   return (
     <div className="page">
       <PageHeading
-        eyebrow="PERSONALITY LIBRARY"
-        title="Different people. Shared dispositions."
+        eyebrow=""
+        title="Personas"
         description="A persona can belong to several characters. Their identities and memories stay separate."
         action={
           <Button

@@ -1,7 +1,7 @@
 .scrim {
   position: fixed;
   inset: 0;
-  background: #071010aa;
+  background: #000a;
   z-index: 50;
   display: flex;
   align-items: center;
@@ -12,9 +12,9 @@
 .modal {
   width: min(540px, 100%);
   max-height: 90vh;
-  border: 1px solid #48544b;
-  border-radius: 7px;
-  background: #1d2424;
+  border: 1px solid #5c5c5c;
+  border-radius: 8px;
+  background: #202020;
   box-shadow: 0 30px 100px #0008;
   display: flex;
   flex-direction: column;
@@ -30,11 +30,11 @@
   border-bottom: 1px solid var(--line);
 }
 .modal > header h2 {
-  font-size: 30px;
+  font-size: 23px;
   margin: 0 0 7px;
 }
 .modal > header p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin: 0;
 }
@@ -49,12 +49,12 @@
   margin-bottom: 20px;
 }
 .field > span {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 550;
-  color: #cdd6cc;
+  color: var(--ink);
 }
 .field small {
-  color: #85948f;
+  color: var(--muted);
 }
 .field input,
 .field textarea,
@@ -62,12 +62,12 @@
 input,
 textarea,
 select {
-  background: #151c1c;
-  border: 1px solid #3a4543;
-  color: #d7ded5;
-  border-radius: 4px;
+  background: #121212;
+  border: 1px solid #505050;
+  color: var(--ink);
+  border-radius: 6px;
   padding: 10px 11px;
-  font-size: 12px;
+  font-size: 13px;
   min-width: 0;
   max-width: 100%;
 }
@@ -80,7 +80,7 @@ select {
 }
 input::placeholder,
 textarea::placeholder {
-  color: #6c7c76;
+  color: #92928c;
 }
 .actions {
   display: flex;
@@ -94,11 +94,11 @@ textarea::placeholder {
   gap: 0 20px;
 }
 .info-box {
-  background: #252e2b;
-  border: 1px solid #3b4940;
+  background: #292724;
+  border: 1px solid #555046;
   border-radius: 4px;
   padding: 13px 15px;
-  color: #a8b7a4;
+  color: #c8c4bc;
   font-size: 11px;
   line-height: 1.7;
   margin: 15px 0;
@@ -132,7 +132,7 @@ textarea::placeholder {
   border-bottom: 1px solid var(--line);
 }
 .tabs button {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   padding: 12px 10px;
   border: 0;
@@ -144,12 +144,17 @@ textarea::placeholder {
   border-bottom-color: var(--accent);
 }
 .tabs.large {
-  gap: 25px;
-  margin-top: 35px;
+  gap: 5px;
+  margin-top: 16px;
+  background: #202020;
+  padding: 4px;
+  border-radius: 7px;
+  border: 1px solid #424242;
 }
 .tabs.large button {
   font-size: 12px;
-  padding: 14px 0;
+  padding: 10px 14px;
+  border-radius: 4px;
 }
 .settings-content {
   padding: 32px 0;
@@ -162,11 +167,11 @@ textarea::placeholder {
   margin-bottom: 30px;
 }
 .settings-content h2 {
-  font-size: 28px;
+  font-size: 21px;
 }
 .prompt-editor {
   font-family: ui-monospace, SFMono-Regular, monospace;
-  font-size: 11px !important;
+  font-size: 12px !important !important;
 }
 .cast-editor {
   border: 1px solid var(--line);
@@ -195,4 +200,8 @@ textarea::placeholder {
   right: 20px;
   z-index: 49;
   box-shadow: 0 10px 40px #0007;
+}
+.tabs.large button.selected {
+  background: #37332e;
+  color: #eed0a4;
 }

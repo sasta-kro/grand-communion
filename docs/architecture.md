@@ -35,6 +35,8 @@ Core API records have shared TypeScript interfaces in `lib/types.ts`. Field-driv
 
 Run `npm --prefix frontend run build` for type checking and the production bundle, `npm --prefix frontend run typecheck` for types alone, and `npm --prefix frontend run format` to apply the project's pinned Prettier formatter. `format:check` verifies formatting without modifying files.
 
+Theme colors and typography start in `styles/base.css`. Component styles live in the corresponding feature stylesheets. `components/Icon.tsx` maps the shared solid icons, and `components/Avatar.tsx` renders character placeholders. Interface labels belong to their feature components. See [icon attribution](third-party-notices.md) for the icon packages and license notices.
+
 ## Python terms in this project
 
 **FastAPI** is the web framework. Decorators such as `@app.post(...)` map a URL and HTTP method to a Python function. It integrates Pydantic validation and generates an OpenAPI schema. It does not itself make background work durable or provide an external job queue. Communion supplies its own engine and persistence.

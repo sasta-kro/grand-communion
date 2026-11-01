@@ -1,16 +1,16 @@
-import {
-  ArrowUpRight,
-  ChevronRight,
-  Compass,
-  Pause,
-  Play,
-  Plus,
-} from "lucide-react";
-import { Badge, Button } from "../../components/ui";
+import { ArrowRight, Pause, Play, Plus } from "lucide-react";
+import { Icon, type IconName } from "../../components/Icon";
+import { Badge, Button, PageHeading } from "../../components/ui";
 import { api } from "../../lib/api";
 import { date, fmt } from "../../lib/format";
 import { go } from "../../lib/navigation";
-import { Data, PageProps } from "../../lib/types";
+import type { PageProps } from "../../lib/types";
+
+const scenarioIcons: Record<string, IconName> = {
+  lantern: "lantern",
+  observatory: "observatory",
+  floodgate: "floodgate",
+};
 
 export function SessionsPage({
   boot,
@@ -25,84 +25,85 @@ export function SessionsPage({
 }) {
   return (
     <>
-      <div className="page-top">
-        <span className="eyebrow">YOUR WORLDS</span>
-        <span className="quiet">Everything stays on this machine.</span>
-      </div>
-      <div className="page-heading">
-        <div>
-          <h1>Leave a world in motion.</h1>
-          <p>
-            Gather a cast. Set the scene. Come back to a story that carried on.
-          </p>
-        </div>
-        <Button primary onClick={newSession}>
-          <Plus size={17} />
-          New session
-        </Button>
-      </div>
+      <PageHeading
+        eyebrow=""
+        title="Sessions"
+        description="Open a conversation, or start one from a scenario."
+        action={
+          <Button primary onClick={newSession}>
+            <Plus size={17} />
+            New session
+          </Button>
+        }
+      />
       {boot.sessions.length === 0 ? (
         <div className="welcome">
-          <div className="orbital">
-            <Compass size={64} />
-          </div>
-          <span className="eyebrow">A PLACE TO BEGIN</span>
-          <h2>Every world starts with a gathering.</h2>
+          <Icon name="chat" size={36} />
+          <h2>No sessions yet</h2>
           <p>
-            Choose a setting and bring six distinct voices into it.
-            <br />
-            Their memories stay their own. Their conversation is shared.
+            Create a session to choose its scenario and characters. New sessions
+            start paused.
           </p>
           <Button primary onClick={newSession}>
-            Create your first session
-            <ArrowUpRight size={16} />
+            <Plus size={16} />
+            Create session
           </Button>
         </div>
       ) : (
         <div className="session-grid">
-          {boot.sessions.map((s: Data) => (
-            <article className="session-card" key={s.id}>
-              <div className="row between">
-                <Badge value={s.status} />
-                <span className="quiet">{date(s.updated)}</span>
+          {boot.sessions.map((session) => (
+            <article className="session-card" key={session.id}>
+              <div className="session-summary">
+                <Icon name="chat" size={26} />
+                <div>
+                  <button
+                    className="card-link"
+                    onClick={() => {
+                      localStorage.setItem("communion:lastSession", session.id);
+                      go("/scene/" + session.id);
+                    }}
+                  >
+                    <h2>{session.name}</h2>
+                  </button>
+                  <p className="quiet">
+                    {session.character_count} characters ·{" "}
+                    {fmt(session.message_count)} messages
+                  </p>
+                  <time
+                    className="quiet"
+                    dateTime={new Date(session.updated * 1000).toISOString()}
+                  >
+                    Updated {date(session.updated)}
+                  </time>
+                </div>
               </div>
-              <button
-                className="card-link"
-                onClick={() => {
-                  localStorage.setItem("communion:lastSession", s.id);
-                  go("/scene/" + s.id);
-                }}
-              >
-                <h2>{s.name}</h2>
-                <ArrowUpRight size={20} />
-              </button>
-              <p className="quiet">
-                {s.character_count} characters · {fmt(s.message_count)} messages
-              </p>
               <div className="card-footer">
-                <Button onClick={() => go("/scene/" + s.id)}>
-                  Open scene
-                  <ChevronRight size={15} />
+                <Badge value={session.status} />
+                <Button onClick={() => go("/scene/" + session.id)}>
+                  Open chat
+                  <ArrowRight size={15} />
                 </Button>
                 <button
                   title={
-                    s.status === "running" ? "Pause session" : "Resume session"
+                    session.status === "running"
+                      ? "Pause session"
+                      : "Resume session"
                   }
                   className="icon"
                   onClick={() =>
                     run(async () => {
                       await api(
-                        `/sessions/${s.id}/${s.status === "running" ? "pause" : "start"}`,
+                        `/sessions/${session.id}/${session.status === "running" ? "pause" : "start"}`,
                         "POST",
                       );
                       await refresh();
                     })
                   }
                 >
-                  {s.status === "running" ? (
-                    <Pause size={17} />
+                  {session.status === "running" ? (
+                    <Pause size={19} />
                   ) : (
-                    <Play size={17} />
+                    <Play size={19} />
                   )}
                 </button>
               </div>
@@ -112,38 +113,29 @@ export function SessionsPage({
       )}
       <div className="section-heading">
         <div>
-          <h2>Three starting points</h2>
-          <p>Fresh worlds you can change into something entirely your own.</p>
+          <h2>Scenarios</h2>
+          <p>Start a separate session with these characters and settings.</p>
         </div>
         <a href="#/scenarios">
-          Explore scenarios
-          <ArrowUpRight size={15} />
+          View all
+          <ArrowRight size={15} />
         </a>
       </div>
       <div className="world-grid">
-        {boot.scenarios.slice(0, 3).map((s: Data, i: number) => (
-          <article className="world-card" key={s.id}>
-            <div className="world-number">
-              0{i + 1}
-              <span>
-                {(
-                  {
-                    lantern: "VIGIL",
-                    observatory: "DISCOVERY",
-                    floodgate: "ENCOUNTER",
-                  } as Record<string, string>
-                )[s.id] || "WORLD"}
-              </span>
+        {boot.scenarios.slice(0, 3).map((scenario) => (
+          <article className="world-card" key={scenario.id}>
+            <div className="scenario-icon">
+              <Icon
+                name={scenarioIcons[scenario.id] || "scenarios"}
+                size={28}
+              />
+              <span>{scenario.cast.length} characters</span>
             </div>
-            <h3>{s.name}</h3>
-            <p>{s.description}</p>
-            <button
-              onClick={() => {
-                onSelectScenario(s.id);
-              }}
-            >
-              Gather this cast
-              <ArrowUpRight size={16} />
+            <h3>{scenario.name}</h3>
+            <p>{scenario.description}</p>
+            <button onClick={() => onSelectScenario(scenario.id)}>
+              Use scenario
+              <ArrowRight size={16} />
             </button>
           </article>
         ))}

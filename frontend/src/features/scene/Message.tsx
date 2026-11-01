@@ -1,4 +1,5 @@
-import { color, initials, stamp } from "../../lib/format";
+import { Avatar } from "../../components/Avatar";
+import { stamp } from "../../lib/format";
 import { BoardMessage, Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
 
@@ -8,16 +9,16 @@ export function Message({ model, m }: { model: SceneModel; m: BoardMessage }) {
 
   return (
     <>
-      {" "}
       <article className="message" id={"message-" + m.id} key={m.id}>
         <button
-          className={"avatar " + color(m.name)}
+          className="avatar-button"
+          aria-label={"View " + m.name}
           onClick={() => {
             const c = scene.characters.find((c: Data) => c.id === m.author_id);
             if (c) setEdit({ ...c });
           }}
         >
-          {initials(m.name)}
+          <Avatar name={m.name} />
         </button>
         <div className="message-content">
           <div className="message-header">

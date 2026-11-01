@@ -3,7 +3,7 @@ import type { SettingsSectionProps } from "./types";
 export function RuntimeSettings({ form, set }: SettingsSectionProps) {
   return (
     <>
-      <h2>A rhythm for the gathering</h2>
+      <h2>Timing and concurrency</h2>
       <p>
         Each cooldown sends the current board tail and that character's memory.
         The model may speak or return no response.

@@ -12,8 +12,8 @@ export function Providers({ boot, refresh, fail, notify }: PageProps) {
   return (
     <div className="page">
       <PageHeading
-        eyebrow="MODEL CONNECTIONS"
-        title="One world. Any capable model."
+        eyebrow=""
+        title="Providers"
         description="Provider details stay separate from characters, scenes, and memory."
         action={
           <Button

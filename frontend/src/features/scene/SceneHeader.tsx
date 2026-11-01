@@ -1,13 +1,5 @@
-import {
-  Activity,
-  ArrowLeft,
-  BookOpen,
-  Pause,
-  Play,
-  Save,
-  SlidersHorizontal,
-  Users,
-} from "lucide-react";
+import { ArrowLeft, Pause, Play } from "lucide-react";
+import { Icon } from "../../components/Icon";
 import { Badge, Button } from "../../components/ui";
 import { api } from "../../lib/api";
 import { fmt } from "../../lib/format";
@@ -29,7 +21,6 @@ export function SceneHeader({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {" "}
       <header className="scene-header">
         <div>
           <a href="#/sessions" className="back">
@@ -40,7 +31,7 @@ export function SceneHeader({ model }: { model: SceneModel }) {
           <div className="row">
             <Badge value={scene.status} />
             <span className="quiet">
-              {scene.characters.length} voices ·{" "}
+              {scene.characters.length} characters ·{" "}
               {fmt(scene.cutoff ? scene.messages.length : 0)} loaded messages
             </span>
           </div>
@@ -50,15 +41,15 @@ export function SceneHeader({ model }: { model: SceneModel }) {
             title="Scene settings"
             onClick={() => setSceneConfig({ ...scene.settings })}
           >
-            <SlidersHorizontal size={16} />
+            <Icon name="controls" size={18} />
             <span>Settings</span>
           </Button>
           <Button className="mobile-cast" onClick={() => setCastOpen(true)}>
-            <Users size={16} />
+            <Icon name="cast" size={18} />
             <span>Cast</span>
           </Button>
           <Button onClick={() => setRecapOpen(true)}>
-            <BookOpen size={16} />
+            <Icon name="recap" size={18} />
             <span>Recap</span>
           </Button>
           <Button
@@ -67,20 +58,14 @@ export function SceneHeader({ model }: { model: SceneModel }) {
               setSaveOpen(true);
             }}
           >
-            <Save size={16} />
+            <Icon name="save" size={18} />
             <span>Save</span>
           </Button>
           <Button
             className={diagnostics ? "active" : ""}
-            onClick={() => {
-              setDiagnostics(!diagnostics);
-              localStorage.setItem(
-                "communion:diagnostics",
-                String(!diagnostics),
-              );
-            }}
+            onClick={() => setDiagnostics(!diagnostics)}
           >
-            <Activity size={16} />
+            <Icon name="diagnostics" size={18} />
             <span>Diagnostics</span>
           </Button>
           <Button

@@ -86,6 +86,8 @@ python3 scripts/communion.py api GET /bootstrap
 
 See [API and command-line usage](docs/api.md) for start/pause commands, in-world speech, settings edits, and the endpoint reference.
 
+Frontend module locations, formatting commands, and theme entry points are documented in [architecture and development tools](docs/architecture.md). Icon credits are listed in [third-party notices](docs/third-party-notices.md).
+
 ## Memory and narration
 
 The complete transcript is retained in SQLite. Each character starts with an independent first-person memory file based on their own background. Later compactions create immutable checkpoints. The readable `memory.md` lives under:

@@ -25,7 +25,7 @@ export function NewSessionDialog({
 }) {
   return (
     <Modal
-      title="Start a new world"
+      title="New session"
       subtitle="A new conversation with its own history and memories."
       onClose={() => onClose()}
     >
@@ -40,7 +40,7 @@ export function NewSessionDialog({
       </Field>
       <Field label="Session name" hint="Leave blank to use the scenario name.">
         <input
-          placeholder="An evening at the gathering"
+          placeholder="Session name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />

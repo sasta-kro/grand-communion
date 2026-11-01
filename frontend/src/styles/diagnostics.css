@@ -2,7 +2,7 @@
   width: 330px;
   flex-shrink: 0;
   border-left: 1px solid var(--line);
-  background: #171e1e;
+  background: #1b1b1b;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -11,7 +11,7 @@
   padding: 18px 16px 8px;
 }
 .diagnostics h3 {
-  font-size: 12px;
+  font-size: 13px;
   margin: 0;
   display: flex;
   align-items: center;
@@ -33,19 +33,19 @@
 }
 .stats strong {
   display: block;
-  font-family: var(--serif);
-  font-weight: 400;
+  font-family: var(--font);
+  font-weight: 650;
   font-size: 25px;
-  color: #d4dfc3;
+  color: var(--ink);
 }
 .stats span {
-  font-size: 9px;
-  color: #8f9f90;
+  font-size: 10px;
+  color: var(--muted);
   display: block;
   margin-top: 5px;
 }
 .chart {
-  border: 1px solid #354134;
+  border: 1px solid #484848;
   border-radius: 3px;
   padding: 10px;
   height: 100px;
@@ -58,7 +58,7 @@
 }
 .chart span {
   font-size: 10px;
-  color: #6f836f;
+  color: var(--muted);
   text-align: center;
   line-height: 1.8;
 }
@@ -69,14 +69,14 @@
 .context-meter span {
   font-size: 10px;
   font-weight: 400;
-  color: #b9c7b0;
+  color: #bbbbbb;
 }
 .context-meter small {
   font-size: 9px;
-  color: #788c78;
+  color: var(--muted);
 }
 .track {
-  background: #303b31;
+  background: #343434;
   height: 3px;
   margin: 8px 0 5px;
   border-radius: 5px;
@@ -84,7 +84,7 @@
 }
 .track > i {
   display: block;
-  background: #bdd19e;
+  background: var(--accent);
   height: 100%;
 }
 .request-list {
@@ -101,12 +101,12 @@
   width: 100%;
   background: none;
   border: 0;
-  border-bottom: 1px solid #29352e;
+  border-bottom: 1px solid #2f2f2f;
   padding: 12px 5px;
   text-align: left;
 }
 .request-row.chosen {
-  background: #2a352a;
+  background: #2e2e2e;
 }
 .request-row strong {
   font-size: 11px;
@@ -115,7 +115,7 @@
 .request-row small {
   display: block;
   font-size: 8px;
-  color: #869a83;
+  color: #8c8c8c;
   margin-top: 6px;
 }
 .request-row > span:last-child {
@@ -137,14 +137,14 @@ dl {
 }
 .request-detail dt,
 dt {
-  color: #899a85;
+  color: #8d8d8d;
 }
 .request-detail dd,
 dd {
   margin: 0;
   text-align: right;
   overflow-wrap: anywhere;
-  color: #c4d0b9;
+  color: #c4c4c4;
 }
 .reasoning {
   font-family: ui-monospace, SFMono-Regular, monospace;
@@ -152,9 +152,9 @@ dd {
   line-height: 1.85;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  color: #a3b398;
-  background: #131b17;
-  border: 1px solid #334230;
+  color: #a5a5a5;
+  background: #171717;
+  border: 1px solid #373737;
   padding: 13px;
   border-radius: 3px;
   max-height: 420px;
@@ -171,28 +171,28 @@ dd {
   padding: 6px;
 }
 .log {
-  border-bottom: 1px solid #303a31;
+  border-bottom: 1px solid #343434;
   padding: 12px 0;
 }
 .log time {
   font-size: 8px;
   float: right;
-  color: #778b73;
+  color: #7c7c7c;
 }
 .log p {
   font-family: ui-monospace, monospace;
   font-size: 10px;
-  color: #a9b9a0;
+  color: #ababab;
   margin: 8px 0;
   overflow-wrap: anywhere;
 }
 .log small {
   font-size: 8px;
-  color: #7c9374;
+  color: #818181;
 }
 .severity {
   font-size: 8px;
-  color: #9dbb8b;
+  color: #a1a1a1;
 }
 .severity.ERROR,
 .error-text {
@@ -200,4 +200,25 @@ dd {
 }
 .severity.WARNING {
   color: #e0c68b;
+}
+.outcome-chart {
+  display: flex;
+  gap: 3px;
+  height: 34px;
+  align-items: flex-end;
+}
+.outcome-chart span {
+  flex: 1;
+  background: #8c9b84;
+  min-width: 3px;
+  height: 65%;
+  border-radius: 2px 2px 0 0;
+}
+.outcome-chart span.failed {
+  background: #d59583;
+  height: 100%;
+}
+.outcome-chart span.retried {
+  background: var(--accent);
+  height: 85%;
 }

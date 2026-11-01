@@ -1,6 +1,6 @@
 import { ChevronRight, Plus } from "lucide-react";
+import { Avatar } from "../../components/Avatar";
 import { Button, Modal } from "../../components/ui";
-import { color, initials } from "../../lib/format";
 import { Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
 
@@ -9,7 +9,6 @@ export function CastDialog({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {" "}
       {castOpen && (
         <Modal title="People in this scene" onClose={() => setCastOpen(false)}>
           <Button
@@ -30,9 +29,7 @@ export function CastDialog({ model }: { model: SceneModel }) {
                 setEdit({ ...c });
               }}
             >
-              <span className={"avatar " + color(c.name)}>
-                {initials(c.name)}
-              </span>
+              <Avatar name={c.name} />
               <span>
                 <strong>{c.name}</strong>
                 <small>{c.role}</small>

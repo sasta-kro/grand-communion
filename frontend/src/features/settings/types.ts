@@ -1,4 +1,4 @@
-import type { Data, BootstrapData } from "../../lib/types";
+import type { BootstrapData, Data } from "../../lib/types";
 export interface SettingsSectionProps {
   boot: BootstrapData;
   form: Data;

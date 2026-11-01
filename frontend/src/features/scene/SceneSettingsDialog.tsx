@@ -7,7 +7,6 @@ export function SceneSettingsDialog({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {" "}
       {sceneConfig && (
         <Modal
           title="Scene settings"

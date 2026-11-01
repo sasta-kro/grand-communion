@@ -28,6 +28,9 @@ export function useSceneController({
       localStorage.getItem("communion:diagnostics") === "true",
     ),
     [tab, setTab] = useState("Status");
+  useEffect(() => {
+    localStorage.setItem("communion:diagnostics", String(diagnostics));
+  }, [diagnostics]);
   const [text, setText] = useState(""),
     [identity, setIdentity] = useState(""),
     [custom, setCustom] = useState(""),

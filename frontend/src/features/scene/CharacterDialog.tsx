@@ -8,10 +8,9 @@ export function CharacterDialog({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {" "}
       {edit && (
         <Modal
-          title={edit.id === "new" ? "A new person enters" : edit.name}
+          title={edit.id === "new" ? "Add character" : edit.name}
           subtitle="Identity, private background, and first-person memory."
           onClose={() => setEdit(null)}
           wide
@@ -105,7 +104,7 @@ export function CharacterDialog({ model }: { model: SceneModel }) {
             Keep this character quiet. Regular observation continues.
           </label>
           <div className="memory-box">
-            <h3>My recollections</h3>
+            <h3>Character memory</h3>
             <p>
               {edit.memory ||
                 "No compacted memory yet. Recent observations remain in the context tail."}

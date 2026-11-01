@@ -22,10 +22,9 @@ export function RecapDialog({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {" "}
       {recapOpen && (
         <Modal
-          title="The chronicle"
+          title="Session recap"
           subtitle="An observer's account. Never fed back into the world."
           wide
           onClose={() => setRecapOpen(false)}
@@ -72,16 +71,15 @@ export function RecapDialog({ model }: { model: SceneModel }) {
                 }
               }}
             >
-              {recapBusy ? "Preparing the chronicle..." : "Recap the session"}
+              {recapBusy ? "Generating recap..." : "Generate recap"}
             </Button>
           </div>
           {!recaps.length && (
             <div className="empty-inline">
               <BookOpen size={32} />
-              <h3>A story waiting to be told.</h3>
+              <h3>No recaps yet</h3>
               <p>
-                Prepare a recap now, or let the scheduled narrator gather the
-                next chapter.
+                Generate a recap now, or wait for the next scheduled report.
               </p>
             </div>
           )}

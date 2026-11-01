@@ -30,7 +30,6 @@ export function DiagnosticsPanel({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {" "}
       {diagnostics && (
         <aside className="diagnostics">
           <div className="row between">

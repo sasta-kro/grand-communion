@@ -17,8 +17,8 @@ export function Preferences({ boot, refresh, fail, notify }: PageProps) {
   return (
     <div className="page settings-page">
       <PageHeading
-        eyebrow="MAKE IT YOURS"
-        title="The rules around the world."
+        eyebrow=""
+        title="Settings"
         description="Global defaults apply to existing sessions unless a session has its own override."
         action={
           <Button

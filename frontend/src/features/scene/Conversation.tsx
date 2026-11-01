@@ -25,7 +25,6 @@ export function Conversation({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {" "}
       <section className="conversation">
         <div className="transcript-toolbar">
           <span>PUBLIC CONVERSATION</span>
@@ -94,9 +93,7 @@ export function Conversation({ model }: { model: SceneModel }) {
           {!filtered.length && (
             <div className="empty-scene">
               <Compass size={38} />
-              <h2>
-                {search ? "No matching messages" : "The room is waiting."}
-              </h2>
+              <h2>{search ? "No matching messages" : "No messages yet"}</h2>
               <p>
                 {search
                   ? "Try another name or phrase."

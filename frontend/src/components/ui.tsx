@@ -100,7 +100,7 @@ export function PageHeading({
 }) {
   return (
     <>
-      <div className="eyebrow">{eyebrow}</div>
+      {eyebrow && <div className="eyebrow">{eyebrow}</div>}
       <div className="page-heading">
         <div>
           <h1>{title}</h1>

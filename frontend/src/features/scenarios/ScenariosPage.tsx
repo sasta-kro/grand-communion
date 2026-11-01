@@ -27,9 +27,9 @@ export function Scenarios({
   return (
     <div className="page">
       <PageHeading
-        eyebrow="STARTING CONDITIONS"
-        title="A place. A cast. A possibility."
-        description="Scenarios are reusable beginnings. Each session becomes its own world."
+        eyebrow=""
+        title="Scenarios"
+        description="Edit the setting, characters, and activity used to create new sessions."
         action={
           <Button
             primary
@@ -80,7 +80,7 @@ export function Scenarios({
       </div>
       {edit && (
         <Modal
-          title="Build a scenario"
+          title="Edit scenario"
           subtitle="Every character receives the shared setting and only their own private background."
           wide
           onClose={() => setEdit(null)}

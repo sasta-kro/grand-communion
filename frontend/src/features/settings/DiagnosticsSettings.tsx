@@ -3,7 +3,7 @@ import type { SettingsSectionProps } from "./types";
 export function DiagnosticsSettings({ form, set }: SettingsSectionProps) {
   return (
     <>
-      <h2>See the machinery when you need it.</h2>
+      <h2>Diagnostics</h2>
       <label className="check">
         <input
           type="checkbox"
