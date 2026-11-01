@@ -1,0 +1,36 @@
+# Local credentials. Keep the documented example in version control.
+.env
+.env.*
+!.env.example
+
+# Private runtime state: worlds, memories, credentials, logs, and process IDs.
+/data/
+/.local/
+
+# Python environments, bytecode, package metadata, and tool caches.
+/.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+/.pytest_cache/
+/.ruff_cache/
+/build/
+/dist/
+
+# Frontend dependencies and generated build output.
+/frontend/node_modules/
+/frontend/dist/
+*.tsbuildinfo
+
+# Local research checkouts and private implementation notes.
+/tools/
+/probe_repos/
+/docs/internal/
+
+# Editor and operating-system files.
+.DS_Store
+.idea/
+.vscode/
+
+# Temporary harness configuration, superseded by provider settings.
+/temp.txt
