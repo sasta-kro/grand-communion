@@ -5,3 +5,5 @@ Communion uses **Font Awesome Free 6.5.2**, by [Fonticons, Inc.](https://fontawe
 The packaged SVG/JavaScript icons are licensed under [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/). The icons' path data is used without modification. The package's license and copyright notices are included in `frontend/public/licenses/font-awesome-free.txt` and are served at `/licenses/font-awesome-free.txt` in built applications.
 
 Secondary action icons use [Lucide](https://lucide.dev), distributed under the ISC license in its installed package. Dependency manifests and lock files identify the packages used by the application.
+
+Interface localization uses [i18next](https://www.i18next.com) and [react-i18next](https://react.i18next.com), distributed under their packaged MIT licenses. Copies are included in `frontend/public/licenses/i18next.txt` and `frontend/public/licenses/react-i18next.txt` and are served with the built application.

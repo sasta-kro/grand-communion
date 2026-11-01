@@ -1,5 +1,6 @@
 import { BookOpen } from "lucide-react";
 import { Button, Modal } from "../../components/ui";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { date } from "../../lib/format";
 import { Data } from "../../lib/types";
@@ -24,20 +25,20 @@ export function RecapDialog({ model }: { model: SceneModel }) {
     <>
       {recapOpen && (
         <Modal
-          title="Session recap"
-          subtitle="An observer's account. Never fed back into the world."
+          title={tr("recaps.sessionRecap")}
+          subtitle={tr("recaps.anObserverSAccountNeverFedBackInto")}
           wide
           onClose={() => setRecapOpen(false)}
         >
           <div className="recap-controls">
             <select
-              aria-label="Narrator access"
+              aria-label={tr("recaps.narratorAccess")}
               value={scope}
               onChange={(e) => setScope(e.target.value)}
             >
-              <option value="public">Public events only</option>
+              <option value="public">{tr("recaps.publicEventsOnly")}</option>
               <option value="private">
-                Include private memories and reasoning
+                {tr("recaps.includePrivateMemoriesAndReasoning")}
               </option>
             </select>
             <Button
@@ -54,7 +55,7 @@ export function RecapDialog({ model }: { model: SceneModel }) {
                 }
               }}
             >
-              Since my last visit
+              {tr("recaps.sinceMyLastVisit")}
             </Button>
             <Button
               primary
@@ -71,16 +72,16 @@ export function RecapDialog({ model }: { model: SceneModel }) {
                 }
               }}
             >
-              {recapBusy ? "Generating recap..." : "Generate recap"}
+              {recapBusy
+                ? tr("recaps.generatingRecap")
+                : tr("recaps.generateRecap")}
             </Button>
           </div>
           {!recaps.length && (
             <div className="empty-inline">
               <BookOpen size={32} />
-              <h3>No recaps yet</h3>
-              <p>
-                Generate a recap now, or wait for the next scheduled report.
-              </p>
+              <h3>{tr("recaps.noRecapsYet")}</h3>
+              <p>{tr("recaps.generateARecapNowOrWaitForThe")}</p>
             </div>
           )}
           {recaps.map((r) => (
@@ -89,8 +90,8 @@ export function RecapDialog({ model }: { model: SceneModel }) {
                 <span className="eyebrow">{date(r.created)}</span>
                 <span className="quiet tiny">
                   {r.scope === "private"
-                    ? "Includes private material"
-                    : "Public account"}{" "}
+                    ? tr("recaps.includesPrivateMaterial")
+                    : tr("recaps.publicAccount")}{" "}
                   · #{r.after_id}–#{r.cutoff}
                 </span>
               </div>
@@ -98,7 +99,7 @@ export function RecapDialog({ model }: { model: SceneModel }) {
               <p className="narrative">{r.body.narrative}</p>
               {r.body.notable.length > 0 && (
                 <>
-                  <h4>NOTABLE MOMENTS</h4>
+                  <h4>{tr("recaps.notableMoments")}</h4>
                   {r.body.notable.map((n: Data, i: number) => (
                     <div className="notable" key={i}>
                       <p>{n.text}</p>
@@ -113,7 +114,7 @@ export function RecapDialog({ model }: { model: SceneModel }) {
               )}
               {r.body.unresolved.length > 0 && (
                 <>
-                  <h4>UNRESOLVED THREADS</h4>
+                  <h4>{tr("recaps.unresolvedThreads")}</h4>
                   <ul>
                     {r.body.unresolved.map((u: string, i: number) => (
                       <li key={i}>{u}</li>

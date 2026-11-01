@@ -1,0 +1,150 @@
+.help-label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+  max-width: 100%;
+}
+.help-label > span:first-child {
+  min-width: 0;
+}
+.help-trigger {
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #aaa9a3;
+  cursor: help;
+  border-radius: 50%;
+  padding: 3px;
+  line-height: 1;
+}
+.help-trigger:hover,
+.help-trigger[aria-expanded="true"] {
+  color: var(--accent);
+  background: #ffffff0c;
+}
+.help-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.help-bubble {
+  position: fixed;
+  z-index: 1000;
+  width: max-content;
+  max-width: min(350px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  padding: 12px 14px;
+  background: #292722;
+  border: 1px solid #a38657;
+  border-radius: 6px;
+  box-shadow: 0 7px 25px #0009;
+  color: #eee5d6;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.65;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.field > label {
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--ink);
+}
+.check .help-label {
+  font-weight: 400;
+}
+.empty-state {
+  padding: 28px;
+  margin-bottom: 24px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+}
+.empty-state > svg {
+  color: var(--muted);
+  margin-bottom: 15px;
+}
+.empty-state p {
+  color: var(--muted);
+  max-width: 620px;
+}
+.empty-state .row {
+  flex-wrap: wrap;
+}
+.scene-main > .empty-state {
+  margin: 24px;
+}
+.empty-state .button {
+  margin-top: 8px;
+}
+.spin {
+  animation: pending-spin 1s linear infinite;
+}
+@keyframes pending-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+.transcript-loading {
+  position: absolute;
+  inset: 70px 16px 200px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+.outcome-chart span.cancelled {
+  background: #88817b;
+  height: 40%;
+}
+@media (max-width: 760px) {
+  .help-bubble {
+    font-size: 13px;
+  }
+  .help-trigger {
+    padding: 4px;
+  }
+  .empty-state {
+    padding: 20px;
+  }
+}
+.field > .help-label {
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--ink);
+}
+.help-label > label {
+  cursor: pointer;
+  min-width: 0;
+}
+.composer-options .field {
+  margin: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+}
+.composer-options .field > .help-label {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.filter-row > .field {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 10px;
+}
+.filter-row select {
+  width: 100%;
+}
+select:disabled {
+  opacity: 0.65;
+  cursor: default;
+}

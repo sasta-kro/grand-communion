@@ -79,6 +79,8 @@ with httpx.Client(base_url="http://127.0.0.1:8010/api") as client:
 
 Global speech rules apply to all character generations, including worlds with their own settings and loaded saves. They do not change existing messages or requests already in flight. They are model instructions, so adherence depends on the model rather than a punctuation-rewriting filter.
 
+Request diagnostic metrics now record `http_status` as soon as provider response headers arrive. Missing status is not equivalent to HTTP 200. Cancellation metrics include `cancel_reason`, `cancelled_at`, `elapsed_ms`, and `published_parts`. Causes include `session_paused`, `settings_changed`, `cast_changed`, `server_shutdown`, and a generic `task_cancelled`. Recovery marks previously unfinished requests `interrupted` with `backend_restart`. Older records may lack these metrics; clients should show that absence explicitly.
+
 ## Future in-app assistant
 
 An assistant could use this API through a small set of tools for inspecting and editing scenarios, personas, characters, and settings. It would edit validated application data through the same service as the interface. It would not need to rewrite its own runtime code. Such an assistant is not included yet.

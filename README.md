@@ -6,7 +6,7 @@ Communion is an independent application inspired by useful SillyTavern workflows
 
 ## Start
 
-Requires Python 3.13 or newer, Node 20 or newer, and npm. Python 3.13.13 is the tested setup target, recorded in `.python-version`. The current workspace already has its local Python and frontend dependencies installed.
+Requires Python 3.13 or newer, Node 22.18 or newer, and npm. Python 3.13.13 is the tested setup target, recorded in `.python-version`. Node is used for frontend builds and checks; the already built interface is served by Python. The current workspace already has its local Python and frontend dependencies installed.
 
 ```sh
 ./scripts/start-communion.sh
@@ -88,6 +88,8 @@ See [API and command-line usage](docs/api.md) for start/pause commands, in-world
 
 Frontend module locations, formatting commands, and theme entry points are documented in [architecture and development tools](docs/architecture.md). Icon credits are listed in [third-party notices](docs/third-party-notices.md).
 
+The Chat tab opens the only running conversation directly. With no running session, it shows an explanation and controls to resume a session, open paused history, or create a new session. With several running sessions, it offers a choice. Opening history does not start model requests.
+
 ## Memory and narration
 
 The complete transcript is retained in SQLite. Each character starts with an independent first-person memory file based on their own background. Later compactions create immutable checkpoints. The readable `memory.md` lives under:
@@ -116,12 +118,17 @@ The transcript virtualizes long conversations so only visible message rows are r
 
 The side pane includes current activity, latency history, recent outcomes, estimated per-character context pressure, individual request inspection, provider reasoning, and filtered DEBUG/INFO/WARNING/ERROR logs. Request details distinguish queue delay, first token, reasoning time, total duration, usage, retries, HTTP failures, and output finish reasons.
 
+Hover technical labels or use their question-mark controls for explanations. Help supports keyboard focus, tap, and Escape. Settings and diagnostics share definitions from translation resources. See [interface text and contextual help](docs/interface-text.md) for maintenance and adding languages.
+
+Cancelled means Communion stopped an unfinished request, for example on pause, reconfiguration, or backend shutdown. It differs from a character's deliberate no response. New records store the cancellation cause, elapsed time, and number of already published parts. Older records cannot supply a cause that was never recorded. Missing timing or HTTP data is displayed explicitly rather than treated as success.
+
 Reasoning buffers are bounded. Raw prompts and authentication headers are not logged. The server scrubs known credential values from diagnostic text. Narrator failures and model failures stay outside the fictional transcript.
 
 ## Development and focused checks
 
 ```sh
 .venv/bin/python -m pytest -q
+npm --prefix frontend test
 npm --prefix frontend run build
 ```
 

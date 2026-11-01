@@ -1,6 +1,7 @@
 import { ArrowRight, Pause, Play, Plus } from "lucide-react";
 import { Icon, type IconName } from "../../components/Icon";
 import { Badge, Button, PageHeading } from "../../components/ui";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { date, fmt } from "../../lib/format";
 import { go } from "../../lib/navigation";
@@ -27,26 +28,23 @@ export function SessionsPage({
     <>
       <PageHeading
         eyebrow=""
-        title="Sessions"
-        description="Open a conversation, or start one from a scenario."
+        title={tr("navigation.sessions")}
+        description={tr("sessions.openAConversationOrStartOneFromA")}
         action={
           <Button primary onClick={newSession}>
             <Plus size={17} />
-            New session
+            {tr("sessions.newSession")}
           </Button>
         }
       />
       {boot.sessions.length === 0 ? (
         <div className="welcome">
           <Icon name="chat" size={36} />
-          <h2>No sessions yet</h2>
-          <p>
-            Create a session to choose its scenario and characters. New sessions
-            start paused.
-          </p>
+          <h2>{tr("sessions.noSessionsYet")}</h2>
+          <p>{tr("sessions.createASessionToChooseItsScenarioAnd")}</p>
           <Button primary onClick={newSession}>
             <Plus size={16} />
-            Create session
+            {tr("sessions.createSession")}
           </Button>
         </div>
       ) : (
@@ -66,28 +64,30 @@ export function SessionsPage({
                     <h2>{session.name}</h2>
                   </button>
                   <p className="quiet">
-                    {session.character_count} characters ·{" "}
-                    {fmt(session.message_count)} messages
+                    {tr("sessions.charactersMessages", {
+                      charactercount: session.character_count,
+                      count: fmt(session.message_count),
+                    })}
                   </p>
                   <time
                     className="quiet"
                     dateTime={new Date(session.updated * 1000).toISOString()}
                   >
-                    Updated {date(session.updated)}
+                    {tr("sessions.updated", { time: date(session.updated) })}
                   </time>
                 </div>
               </div>
               <div className="card-footer">
                 <Badge value={session.status} />
                 <Button onClick={() => go("/scene/" + session.id)}>
-                  Open chat
+                  {tr("sessions.openChat")}
                   <ArrowRight size={15} />
                 </Button>
                 <button
                   title={
                     session.status === "running"
-                      ? "Pause session"
-                      : "Resume session"
+                      ? tr("sessions.pauseSession")
+                      : tr("sessions.resumeSession")
                   }
                   className="icon"
                   onClick={() =>
@@ -113,11 +113,11 @@ export function SessionsPage({
       )}
       <div className="section-heading">
         <div>
-          <h2>Scenarios</h2>
-          <p>Start a separate session with these characters and settings.</p>
+          <h2>{tr("navigation.scenarios")}</h2>
+          <p>{tr("sessions.startASeparateSessionWithTheseCharactersAnd")}</p>
         </div>
         <a href="#/scenarios">
-          View all
+          {tr("sessions.viewAll")}
           <ArrowRight size={15} />
         </a>
       </div>
@@ -129,12 +129,14 @@ export function SessionsPage({
                 name={scenarioIcons[scenario.id] || "scenarios"}
                 size={28}
               />
-              <span>{scenario.cast.length} characters</span>
+              <span>
+                {tr("sessions.characters2", { length: scenario.cast.length })}
+              </span>
             </div>
             <h3>{scenario.name}</h3>
             <p>{scenario.description}</p>
             <button onClick={() => onSelectScenario(scenario.id)}>
-              Use scenario
+              {tr("sessions.useScenario")}
               <ArrowRight size={16} />
             </button>
           </article>

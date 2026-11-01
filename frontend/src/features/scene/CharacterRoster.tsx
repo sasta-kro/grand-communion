@@ -1,5 +1,7 @@
 import { ChevronRight, Eye, Plus } from "lucide-react";
 import { Avatar } from "../../components/Avatar";
+import { tr } from "../../i18n";
+import { requestStatusLabel } from "../../lib/requestStatus";
 import { Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
 
@@ -10,8 +12,12 @@ export function CharacterRoster({ model }: { model: SceneModel }) {
     <>
       <aside className="roster">
         <div className="row between">
-          <h3>Characters</h3>
-          <button className="icon" title="Add character" onClick={newCharacter}>
+          <h3>{tr("characters.characters")}</h3>
+          <button
+            className="icon"
+            title={tr("scenarios.addCharacter")}
+            onClick={newCharacter}
+          >
             <Plus size={14} />
           </button>
         </div>
@@ -33,10 +39,10 @@ export function CharacterRoster({ model }: { model: SceneModel }) {
                 <small>{c.role}</small>
                 <em className={phase === "error" ? "error-text" : ""}>
                   {c.muted
-                    ? "Quiet · still listening"
+                    ? tr("characters.quietStillListening")
                     : phase === "cooldown"
-                      ? "Listening"
-                      : phase}
+                      ? tr("characters.listening")
+                      : requestStatusLabel(phase)}
                 </em>
               </span>
               <ChevronRight size={13} />
@@ -45,13 +51,10 @@ export function CharacterRoster({ model }: { model: SceneModel }) {
         })}
         <div className="roster-note">
           <Eye size={15} />
-          <p>
-            You observe from outside the world. The characters hear only what
-            you choose to say within it.
-          </p>
+          <p>{tr("characters.youObserveFromOutsideTheWorldTheCharacters")}</p>
         </div>
         <div className="scene-premise">
-          <span className="eyebrow">SETTING</span>
+          <span className="eyebrow">{tr("characters.setting")}</span>
           <p>{scene.scenario.premise}</p>
         </div>
       </aside>

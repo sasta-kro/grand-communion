@@ -1,6 +1,7 @@
 import { ArrowLeft, Pause, Play } from "lucide-react";
 import { Icon } from "../../components/Icon";
 import { Badge, Button } from "../../components/ui";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { fmt } from "../../lib/format";
 import { SceneModel } from "./useSceneController";
@@ -25,32 +26,34 @@ export function SceneHeader({ model }: { model: SceneModel }) {
         <div>
           <a href="#/sessions" className="back">
             <ArrowLeft size={13} />
-            Sessions
+            {tr("navigation.sessions")}
           </a>
           <h1>{scene.name}</h1>
           <div className="row">
             <Badge value={scene.status} />
             <span className="quiet">
-              {scene.characters.length} characters ·{" "}
-              {fmt(scene.cutoff ? scene.messages.length : 0)} loaded messages
+              {tr("scene.charactersLoadedMessages", {
+                length: scene.characters.length,
+                count: fmt(scene.cutoff ? scene.messages.length : 0),
+              })}
             </span>
           </div>
         </div>
         <div className="scene-actions">
           <Button
-            title="Scene settings"
+            title={tr("scene.sceneSettings")}
             onClick={() => setSceneConfig({ ...scene.settings })}
           >
             <Icon name="controls" size={18} />
-            <span>Settings</span>
+            <span>{tr("navigation.settings")}</span>
           </Button>
           <Button className="mobile-cast" onClick={() => setCastOpen(true)}>
             <Icon name="cast" size={18} />
-            <span>Cast</span>
+            <span>{tr("scene.cast")}</span>
           </Button>
           <Button onClick={() => setRecapOpen(true)}>
             <Icon name="recap" size={18} />
-            <span>Recap</span>
+            <span>{tr("scene.recap")}</span>
           </Button>
           <Button
             onClick={async () => {
@@ -59,14 +62,14 @@ export function SceneHeader({ model }: { model: SceneModel }) {
             }}
           >
             <Icon name="save" size={18} />
-            <span>Save</span>
+            <span>{tr("common.save")}</span>
           </Button>
           <Button
             className={diagnostics ? "active" : ""}
             onClick={() => setDiagnostics(!diagnostics)}
           >
             <Icon name="diagnostics" size={18} />
-            <span>Diagnostics</span>
+            <span>{tr("diagnostics.diagnostics")}</span>
           </Button>
           <Button
             primary
@@ -79,7 +82,11 @@ export function SceneHeader({ model }: { model: SceneModel }) {
             ) : (
               <Play size={16} />
             )}
-            <span>{scene.status === "running" ? "Pause" : "Resume"}</span>
+            <span>
+              {scene.status === "running"
+                ? tr("common.pause")
+                : tr("common.resume")}
+            </span>
           </Button>
         </div>
       </header>

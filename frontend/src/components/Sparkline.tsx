@@ -1,3 +1,4 @@
+import { tr } from "../i18n";
 export function Sparkline({ values }: { values: number[] }) {
   const max = Math.max(...values, 1);
   return (
@@ -6,7 +7,7 @@ export function Sparkline({ values }: { values: number[] }) {
         <svg
           viewBox="0 0 300 80"
           role="img"
-          aria-label="Recent request latency"
+          aria-label={tr("diagnostics.recentRequestLatency")}
         >
           <path
             d="M0 75 H300 M0 40 H300 M0 5 H300"
@@ -26,7 +27,9 @@ export function Sparkline({ values }: { values: number[] }) {
           />
         </svg>
       ) : (
-        <span>Latency history appears after requests complete.</span>
+        <span>
+          {tr("diagnostics.latencyHistoryAppearsAfterRequestsComplete")}
+        </span>
       )}
     </div>
   );

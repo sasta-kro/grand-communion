@@ -8,14 +8,17 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "format": "prettier --write src",
-    "format:check": "prettier --check src"
+    "format:check": "prettier --check src",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "6.5.2",
     "@tanstack/react-virtual": "^3.14.24",
+    "i18next": "26.6.0",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-i18next": "17.1.10"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

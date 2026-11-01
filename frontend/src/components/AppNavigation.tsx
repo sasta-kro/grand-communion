@@ -1,3 +1,5 @@
+import { tr } from "../i18n";
+import { chatDestination } from "../lib/chatNavigation";
 import type { BootstrapData } from "../lib/types";
 import { Icon, type IconName } from "./Icon";
 
@@ -10,7 +12,6 @@ export function AppNavigation({
   section: string;
   active: number;
 }) {
-  const lastSession = localStorage.getItem("communion:lastSession");
   const links: {
     section: string;
     label: string;
@@ -27,7 +28,7 @@ export function AppNavigation({
       section: "scene",
       label: "Chat",
       icon: "chat",
-      href: lastSession ? `#/scene/${lastSession}` : "#/sessions",
+      href: chatDestination(boot.sessions),
     },
     {
       section: "scenarios",
@@ -58,9 +59,9 @@ export function AppNavigation({
     <aside className="sidebar">
       <a className="brand" href="#/sessions">
         <Icon name="chat" size={29} />
-        <span>Communion</span>
+        <span>{tr("app.communion")}</span>
       </a>
-      <nav aria-label="Main navigation">
+      <nav aria-label={tr("navigation.mainNavigation")}>
         {links.map((link) => (
           <a
             key={link.section}
@@ -80,8 +81,8 @@ export function AppNavigation({
         <span className={`dot ${active ? "live" : ""}`} />
         <div>
           {active
-            ? `${active} ${active === 1 ? "session" : "sessions"} running`
-            : "No sessions running"}
+            ? tr("navigation.sessionsRunning", { count: active })
+            : tr("navigation.noSessionsRunning")}
         </div>
       </div>
     </aside>

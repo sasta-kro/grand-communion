@@ -1,5 +1,6 @@
 import { Download, Save, Upload } from "lucide-react";
 import { Button, Modal } from "../../components/ui";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { date } from "../../lib/format";
 import { go } from "../../lib/navigation";
@@ -23,13 +24,15 @@ export function SaveDialog({ model }: { model: SceneModel }) {
     <>
       {saveOpen && (
         <Modal
-          title="Session saves"
-          subtitle="History, character memories, and settings. Credentials stay on this machine."
+          title={tr("saves.sessionSaves")}
+          subtitle={tr(
+            "saves.historyCharacterMemoriesAndSettingsCredentialsStayOn",
+          )}
           onClose={() => setSaveOpen(false)}
         >
           <div className="inline">
             <input
-              aria-label="Checkpoint name"
+              aria-label={tr("saves.checkpointName")}
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
             />
@@ -41,19 +44,18 @@ export function SaveDialog({ model }: { model: SceneModel }) {
                     name: saveName,
                   });
                   setSaves(await api(`/sessions/${id}/saves`));
-                  notify("Checkpoint saved");
+                  notify(tr("saves.checkpointSaved"));
                 } catch (e) {
                   fail(e);
                 }
               }}
             >
               <Save size={16} />
-              Save
+              {tr("common.save")}
             </Button>
           </div>
           <div className="info-box">
-            Loading a checkpoint opens a restored copy, paused. This session is
-            preserved.
+            {tr("saves.loadingACheckpointOpensARestoredCopyPaused")}
           </div>
           {saves.map((s) => (
             <div className="save-row" key={s.id}>
@@ -65,7 +67,7 @@ export function SaveDialog({ model }: { model: SceneModel }) {
                 href={"/api/saves/" + s.id}
                 download
                 className="icon"
-                title="Download save"
+                title={tr("saves.downloadSave")}
               >
                 <Download size={17} />
               </a>
@@ -81,13 +83,13 @@ export function SaveDialog({ model }: { model: SceneModel }) {
                   }
                 }}
               >
-                Load
+                {tr("saves.load")}
               </Button>
             </div>
           ))}
           <label className="button import-button">
             <Upload size={16} />
-            Import a saved world
+            {tr("saves.importASavedWorld")}
             <input
               type="file"
               accept="application/json,.json"

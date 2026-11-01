@@ -1,5 +1,7 @@
 import { X } from "lucide-react";
 import { Icon } from "../../components/Icon";
+import { Field } from "../../components/ui";
+import { tr } from "../../i18n";
 import { Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
 
@@ -25,65 +27,63 @@ export function Composer({ model }: { model: SceneModel }) {
       <div className="composer">
         {reply && (
           <div className="replying">
-            Replying to {reply.name} · #{reply.id}
+            {tr("chat.replyingToMessage", { name: reply.name, id: reply.id })}
             <button className="icon" onClick={() => setReply(null)}>
               <X size={13} />
             </button>
           </div>
         )}
         <div className="composer-options">
-          <label>
-            Speak as
+          <Field label={tr("chat.speakAs")}>
             <select
-              aria-label="Participation identity"
+              aria-label={tr("chat.participationIdentity")}
               value={identity}
               onChange={(e) => setIdentity(e.target.value)}
             >
-              <optgroup label="Ambient voices">
+              <optgroup label={tr("chat.ambientVoices")}>
                 {scene.scenario.ambient_voices.map((v: string) => (
                   <option value={"ambient:" + v} key={v}>
                     {v}
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="Characters">
+              <optgroup label={tr("characters.characters")}>
                 {scene.characters.map((c: Data) => (
                   <option value={"character:" + c.id} key={c.id}>
                     {c.name}
                   </option>
                 ))}
               </optgroup>
-              <option value="custom">Another named voice...</option>
+              <option value="custom">{tr("chat.anotherNamedVoice")}</option>
             </select>
-          </label>
-          <label>
-            Address
+          </Field>
+          <Field label={tr("chat.address")}>
             <select
-              aria-label="Message addressee"
+              aria-label={tr("chat.messageAddressee")}
               value={target}
               onChange={(e) => setTarget(e.target.value)}
             >
-              <option value="everyone">Everyone</option>
+              <option value="everyone">{tr("chat.everyone")}</option>
               {scene.characters.map((c: Data) => (
                 <option value={c.id} key={c.id}>
                   {c.name}
                 </option>
               ))}
             </select>
-          </label>
+          </Field>
         </div>
         {identity === "custom" && (
           <input
-            aria-label="Custom voice name"
-            placeholder="Speaker name"
+            aria-label={tr("chat.customVoiceName")}
+            placeholder={tr("chat.speakerName")}
             value={custom}
             onChange={(e) => setCustom(e.target.value)}
           />
         )}
         <div className="compose-input">
           <textarea
-            aria-label="Your contribution"
-            placeholder="Type a message..."
+            aria-label={tr("chat.yourContribution")}
+            placeholder={tr("chat.typeAMessage")}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
@@ -95,14 +95,14 @@ export function Composer({ model }: { model: SceneModel }) {
           />
           <button
             className="send"
-            aria-label="Send contribution"
+            aria-label={tr("chat.sendContribution")}
             disabled={sending || !text.trim()}
             onClick={send}
           >
             <Icon name="send" size={21} />
           </button>
         </div>
-        <small>Only the selected speaker is shown to characters.</small>
+        <small>{tr("chat.onlyTheSelectedSpeakerIsShownToCharacters")}</small>
       </div>
     </>
   );

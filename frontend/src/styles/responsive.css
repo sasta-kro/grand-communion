@@ -277,11 +277,6 @@
   .diagnostics {
     width: min(370px, 100%);
   }
-  .scene-main > .alert {
-    left: 12px;
-    right: 12px;
-    top: 10px;
-  }
   .scrim {
     padding: 12px;
   }

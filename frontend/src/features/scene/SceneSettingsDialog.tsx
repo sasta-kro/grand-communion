@@ -1,4 +1,5 @@
 import { Button, Field, Modal } from "../../components/ui";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { SceneModel } from "./useSceneController";
 
@@ -9,18 +10,18 @@ export function SceneSettingsDialog({ model }: { model: SceneModel }) {
     <>
       {sceneConfig && (
         <Modal
-          title="Scene settings"
-          subtitle="Changes apply to this world. Resuming after a save preserves these values."
+          title={tr("scene.sceneSettings")}
+          subtitle={tr("sceneSettings.changesApplyToThisWorldResumingAfterA")}
           onClose={() => setSceneConfig(null)}
         >
           <div className="form-grid">
             {[
-              ["cooldown", "Character cooldown"],
-              ["global_gap", "Global delivery gap"],
-              ["word_limit", "Words per part"],
-              ["max_parts", "Maximum speech parts"],
-              ["working_context", "Working context ceiling"],
-              ["narrator_interval", "Narrator interval"],
+              ["cooldown", tr("settings.characterCooldown")],
+              ["global_gap", tr("settings.globalDeliveryGap")],
+              ["word_limit", tr("settings.wordsPerPart")],
+              ["max_parts", tr("settings.maximumSpeechParts")],
+              ["working_context", tr("settings.workingContextCeiling")],
+              ["narrator_interval", tr("settings.narratorInterval")],
             ].map(([key, label]) => (
               <Field key={key} label={label}>
                 <input
@@ -39,7 +40,7 @@ export function SceneSettingsDialog({ model }: { model: SceneModel }) {
               </Field>
             ))}
           </div>
-          <Field label="Compaction threshold (%)">
+          <Field label={tr("settings.compactionThreshold")}>
             <input
               type="number"
               min="15"
@@ -60,13 +61,13 @@ export function SceneSettingsDialog({ model }: { model: SceneModel }) {
                   await api(`/sessions/${id}/config`, "PUT", {});
                   setSceneConfig(null);
                   await load();
-                  notify("Global defaults restored");
+                  notify(tr("sceneSettings.globalDefaultsRestored"));
                 } catch (e) {
                   fail(e);
                 }
               }}
             >
-              Use global defaults
+              {tr("sceneSettings.useGlobalDefaults")}
             </Button>
             <Button
               primary
@@ -75,13 +76,13 @@ export function SceneSettingsDialog({ model }: { model: SceneModel }) {
                   await api(`/sessions/${id}/config`, "PUT", sceneConfig);
                   setSceneConfig(null);
                   await load();
-                  notify("Scene settings saved");
+                  notify(tr("sceneSettings.sceneSettingsSaved"));
                 } catch (e) {
                   fail(e);
                 }
               }}
             >
-              Save for this scene
+              {tr("sceneSettings.saveForThisScene")}
             </Button>
           </div>
         </Modal>

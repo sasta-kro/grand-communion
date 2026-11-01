@@ -1,6 +1,7 @@
 import { ChevronRight, Plus } from "lucide-react";
 import { Avatar } from "../../components/Avatar";
 import { Button, Modal } from "../../components/ui";
+import { tr } from "../../i18n";
 import { Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
 
@@ -10,7 +11,10 @@ export function CastDialog({ model }: { model: SceneModel }) {
   return (
     <>
       {castOpen && (
-        <Modal title="People in this scene" onClose={() => setCastOpen(false)}>
+        <Modal
+          title={tr("characters.peopleInThisScene")}
+          onClose={() => setCastOpen(false)}
+        >
           <Button
             onClick={() => {
               setCastOpen(false);
@@ -18,7 +22,7 @@ export function CastDialog({ model }: { model: SceneModel }) {
             }}
           >
             <Plus size={14} />
-            Add character
+            {tr("scenarios.addCharacter")}
           </Button>
           {scene.characters.map((c: Data) => (
             <button

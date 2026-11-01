@@ -1,4 +1,5 @@
-import { Button, Field, Modal } from "../../components/ui";
+import { Button, Checkbox, Field, Modal } from "../../components/ui";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
@@ -10,25 +11,27 @@ export function CharacterDialog({ model }: { model: SceneModel }) {
     <>
       {edit && (
         <Modal
-          title={edit.id === "new" ? "Add character" : edit.name}
-          subtitle="Identity, private background, and first-person memory."
+          title={edit.id === "new" ? tr("scenarios.addCharacter") : edit.name}
+          subtitle={tr(
+            "characters.identityPrivateBackgroundAndFirstPersonMemory",
+          )}
           onClose={() => setEdit(null)}
           wide
         >
           <div className="form-grid">
-            <Field label="Name">
+            <Field label={tr("common.name")}>
               <input
                 value={edit.name}
                 onChange={(e) => setEdit({ ...edit, name: e.target.value })}
               />
             </Field>
-            <Field label="Public role">
+            <Field label={tr("scenarios.publicRole")}>
               <input
                 value={edit.role}
                 onChange={(e) => setEdit({ ...edit, role: e.target.value })}
               />
             </Field>
-            <Field label="Provider">
+            <Field label={tr("scenarios.provider")}>
               <select
                 value={edit.provider_id}
                 onChange={(e) =>
@@ -43,8 +46,8 @@ export function CharacterDialog({ model }: { model: SceneModel }) {
               </select>
             </Field>
             <Field
-              label="Cooldown in seconds"
-              hint="Blank uses the session default."
+              label={tr("characters.cooldownInSeconds")}
+              hint={tr("characters.blankUsesTheSessionDefault")}
             >
               <input
                 type="number"
@@ -60,7 +63,7 @@ export function CharacterDialog({ model }: { model: SceneModel }) {
               />
             </Field>
           </div>
-          <Field label="Copy a reusable persona">
+          <Field label={tr("characters.copyAReusablePersona")}>
             <select
               value={edit.persona_id}
               onChange={(e) =>
@@ -73,7 +76,7 @@ export function CharacterDialog({ model }: { model: SceneModel }) {
                 })
               }
             >
-              <option value="">Custom personality</option>
+              <option value="">{tr("characters.customPersonality")}</option>
               {boot.personas.map((p: Data) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -81,43 +84,45 @@ export function CharacterDialog({ model }: { model: SceneModel }) {
               ))}
             </select>
           </Field>
-          <Field label="Personality, in this character's own words">
+          <Field label={tr("characters.personalityInThisCharacterSOwnWords")}>
             <textarea
               rows={4}
               value={edit.persona}
               onChange={(e) => setEdit({ ...edit, persona: e.target.value })}
             />
           </Field>
-          <Field label="Private background">
+          <Field label={tr("scenarios.privateBackground")}>
             <textarea
               rows={3}
               value={edit.background}
               onChange={(e) => setEdit({ ...edit, background: e.target.value })}
             />
           </Field>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={edit.muted || false}
-              onChange={(e) => setEdit({ ...edit, muted: e.target.checked })}
-            />
-            Keep this character quiet. Regular observation continues.
-          </label>
+          <Checkbox
+            checked={edit.muted || false}
+            onChange={(e) => setEdit({ ...edit, muted: e.target.checked })}
+            label={tr(
+              "characters.keepThisCharacterQuietRegularObservationContinues",
+            )}
+          />
           <div className="memory-box">
-            <h3>Character memory</h3>
+            <h3>{tr("characters.characterMemory")}</h3>
             <p>
               {edit.memory ||
-                "No compacted memory yet. Recent observations remain in the context tail."}
+                tr("characters.noCompactedMemoryYetRecentObservationsRemainIn")}
             </p>
             <small>
-              {edit.memory_checkpoints} checkpoints · observed through #
-              {edit.observed} · memory covers through #{edit.memory_cutoff}
+              {tr("characters.checkpointsObservedThroughMemoryCoversThrough", {
+                memorycheckpoints: edit.memory_checkpoints,
+                observed: edit.observed,
+                memorycutoff: edit.memory_cutoff,
+              })}
             </small>
           </div>
           <div className="actions">
             <Button
               disabled={scene.status === "running" || edit.id === "new"}
-              title="Pause before manually compacting"
+              title={tr("characters.pauseBeforeManuallyCompacting")}
               onClick={async () => {
                 try {
                   await api(
@@ -125,14 +130,14 @@ export function CharacterDialog({ model }: { model: SceneModel }) {
                     "POST",
                   );
                   await load();
-                  notify("Memory checkpoint saved");
+                  notify(tr("characters.memoryCheckpointSaved"));
                   setEdit(null);
                 } catch (e) {
                   fail(e);
                 }
               }}
             >
-              Compact now
+              {tr("characters.compactNow")}
             </Button>
             <Button
               primary
@@ -146,13 +151,13 @@ export function CharacterDialog({ model }: { model: SceneModel }) {
                   );
                   setEdit(null);
                   await load();
-                  notify("Character updated");
+                  notify(tr("characters.characterUpdated"));
                 } catch (e) {
                   fail(e);
                 }
               }}
             >
-              Save character
+              {tr("characters.saveCharacter")}
             </Button>
           </div>
         </Modal>

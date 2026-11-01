@@ -194,12 +194,9 @@ textarea::placeholder {
   flex-direction: column;
 }
 .scene-main > .alert {
-  position: fixed;
-  top: 14px;
-  left: 245px;
-  right: 20px;
-  z-index: 49;
-  box-shadow: 0 10px 40px #0007;
+  position: static;
+  margin: 12px;
+  flex-shrink: 0;
 }
 .tabs.large button.selected {
   background: #37332e;

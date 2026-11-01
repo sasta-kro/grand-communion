@@ -1,7 +1,8 @@
+import { interfaceLocale, tr } from "../i18n";
 export const stamp = (t: number) =>
-  new Date(t * 1000).toLocaleTimeString("en-GB", { hour12: false });
+  new Date(t * 1000).toLocaleTimeString(interfaceLocale(), { hour12: false });
 export const date = (t: number) =>
-  new Date(t * 1000).toLocaleString("en-GB", {
+  new Date(t * 1000).toLocaleString(interfaceLocale(), {
     day: "numeric",
     month: "short",
     hour: "2-digit",
@@ -9,17 +10,22 @@ export const date = (t: number) =>
   });
 export const fmt = (n: number | undefined) =>
   n == null
-    ? "Unknown"
-    : new Intl.NumberFormat("en", {
+    ? tr("format.unknown")
+    : new Intl.NumberFormat(interfaceLocale(), {
         notation: "compact",
         maximumFractionDigits: 1,
       }).format(n);
 export const seconds = (n: number) =>
   n == null
-    ? ""
+    ? tr("common.notRecorded")
     : n < 1000
-      ? `${Math.round(n)} ms`
-      : `${(n / 1000).toFixed(1)} s`;
+      ? tr("format.milliseconds", { value: Math.round(n) })
+      : tr("format.seconds", {
+          value: new Intl.NumberFormat(interfaceLocale(), {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          }).format(n / 1000),
+        });
 export const initials = (name: string) =>
   name
     .split(" ")

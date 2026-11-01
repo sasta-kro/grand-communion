@@ -31,11 +31,15 @@ Each feature owns its page and local editors. Settings tabs are separate compone
 
 `useSceneController` coordinates the current scene, transcript virtualization, and local UI state. `useSessionEvents` owns the event-stream subscription and its cleanup. `useRequestDetails` polls only the selected diagnostic request. These hooks observe and control the server; they do not schedule character turns in the browser.
 
+`useTranscriptPosition` positions the initial virtualized history at its end before revealing it. Programmatic transcript positioning is immediate. Once the reader scrolls up, the existing pinning logic preserves that reading position. Request detail polling stops for terminal requests, and load failures provide a retry instead of silently hiding the error.
+
 Core API records have shared TypeScript interfaces in `lib/types.ts`. Field-driven form drafts and provider-specific diagnostic payloads retain a dynamic record type. Shared controls have explicit React prop types. Type checking also rejects unused imports and variables.
 
 Run `npm --prefix frontend run build` for type checking and the production bundle, `npm --prefix frontend run typecheck` for types alone, and `npm --prefix frontend run format` to apply the project's pinned Prettier formatter. `format:check` verifies formatting without modifying files.
 
-Theme colors and typography start in `styles/base.css`. Component styles live in the corresponding feature stylesheets. `components/Icon.tsx` maps the shared solid icons, and `components/Avatar.tsx` renders character placeholders. Interface labels belong to their feature components. See [icon attribution](third-party-notices.md) for the icon packages and license notices.
+Theme colors and typography start in `styles/base.css`. Component styles live in the corresponding feature stylesheets. `components/Icon.tsx` maps the shared solid icons, and `components/Avatar.tsx` renders character placeholders. Feature components reference stable message IDs for their interface labels. See [icon attribution](third-party-notices.md) for the icon packages and license notices.
+
+Application messages now live in `i18n/en.json` and use i18next/react-i18next through a typed helper. Help definitions are bound to message IDs and rendered by `HelpLabel`. See [interface text and contextual help](interface-text.md) for resource structure, language registration, and the separation between translated interface text and world/model data.
 
 ## Python terms in this project
 

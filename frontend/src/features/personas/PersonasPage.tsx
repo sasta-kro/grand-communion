@@ -1,6 +1,7 @@
 import { ArrowUpRight, Plus } from "lucide-react";
 import { useState } from "react";
 import { Button, Field, Modal, PageHeading } from "../../components/ui";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { color, initials } from "../../lib/format";
 import { Data, PageProps } from "../../lib/types";
@@ -11,8 +12,8 @@ export function Personas({ boot, refresh, fail, notify }: PageProps) {
     <div className="page">
       <PageHeading
         eyebrow=""
-        title="Personas"
-        description="A persona can belong to several characters. Their identities and memories stay separate."
+        title={tr("navigation.personas")}
+        description={tr("personas.aPersonaCanBelongToSeveralCharactersTheir")}
         action={
           <Button
             primary
@@ -21,7 +22,7 @@ export function Personas({ boot, refresh, fail, notify }: PageProps) {
             }
           >
             <Plus size={17} />
-            New persona
+            {tr("personas.newPersona")}
           </Button>
         }
       />
@@ -32,7 +33,7 @@ export function Personas({ boot, refresh, fail, notify }: PageProps) {
             <h2>{p.name}</h2>
             <p>{p.prompt}</p>
             <Button onClick={() => setEdit({ ...p })}>
-              Edit persona
+              {tr("personas.editPersona")}
               <ArrowUpRight size={15} />
             </Button>
           </article>
@@ -40,17 +41,19 @@ export function Personas({ boot, refresh, fail, notify }: PageProps) {
       </div>
       {edit && (
         <Modal
-          title="Edit persona"
-          subtitle="New sessions inherit these traits. Existing characters keep their own copy."
+          title={tr("personas.editPersona")}
+          subtitle={tr(
+            "personas.newSessionsInheritTheseTraitsExistingCharactersKeep",
+          )}
           onClose={() => setEdit(null)}
         >
-          <Field label="Name">
+          <Field label={tr("common.name")}>
             <input
               value={edit.name}
               onChange={(e) => setEdit({ ...edit, name: e.target.value })}
             />
           </Field>
-          <Field label="Personality prompt">
+          <Field label={tr("personas.personalityPrompt")}>
             <textarea
               rows={7}
               value={edit.prompt}
@@ -66,13 +69,13 @@ export function Personas({ boot, refresh, fail, notify }: PageProps) {
                   await api("/personas/" + edit.id, "PUT", edit);
                   setEdit(null);
                   await refresh();
-                  notify("Persona saved");
+                  notify(tr("personas.personaSaved"));
                 } catch (e) {
                   fail(e);
                 }
               }}
             >
-              Save persona
+              {tr("personas.savePersona")}
             </Button>
           </div>
         </Modal>

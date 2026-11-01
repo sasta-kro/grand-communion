@@ -1,5 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef, useState } from "react";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import {
   BoardMessage,
@@ -12,6 +13,7 @@ import {
 } from "../../lib/types";
 import { useRequestDetails } from "./useRequestDetails";
 import { useSessionEvents } from "./useSessionEvents";
+import { useTranscriptPosition } from "./useTranscriptPosition";
 
 export function useSceneController({
   id,
@@ -20,6 +22,7 @@ export function useSceneController({
   fail,
   notify,
 }: ScenePageProps) {
+  const [loadError, setLoadError] = useState("");
   const [scene, setScene] = useState<SceneData | null>(null),
     [requests, setRequests] = useState<RequestRecord[]>([]),
     [logs, setLogs] = useState<LogRecord[]>([]),
@@ -42,12 +45,13 @@ export function useSceneController({
     [recapOpen, setRecapOpen] = useState(false),
     [saveOpen, setSaveOpen] = useState(false),
     [saves, setSaves] = useState<Data[]>([]),
-    [saveName, setSaveName] = useState("Checkpoint");
+    [saveName, setSaveName] = useState(tr("saves.defaultName"));
   const [scope, setScope] = useState(boot.settings.narrator_scope),
     [recapBusy, setRecapBusy] = useState(false),
     [level, setLevel] = useState(""),
     [charFilter, setCharFilter] = useState("");
-  const { reqId, setReqId, detail } = useRequestDetails(id);
+  const { reqId, setReqId, detail, detailError, detailLoading, retryDetail } =
+    useRequestDetails(id);
   const [newCount, setNewCount] = useState(0),
     [sending, setSending] = useState(false),
     [search, setSearch] = useState("");
@@ -76,6 +80,7 @@ export function useSceneController({
   const load = async () => {
     try {
       const s = await api<SceneData>("/sessions/" + id);
+      setLoadError("");
       setScene((old) => {
         if (old)
           s.messages = [
@@ -97,7 +102,8 @@ export function useSceneController({
           "ambient:" + (s.scenario.ambient_voices[0] || "Anonymous voice"),
       );
     } catch (e) {
-      fail(e);
+      setLoadError(e instanceof Error ? e.message : String(e));
+      if (sceneRef.current) fail(e);
     }
   };
   const loadRequests = async () => {
@@ -131,17 +137,15 @@ export function useSceneController({
     setRecapBusy,
     fail,
   });
-  useEffect(() => {
-    if (pendingFocus.current !== null) {
-      const index = filtered.findIndex((m) => m.id === pendingFocus.current);
-      if (index >= 0) {
-        virtualizer.scrollToIndex(index, { align: "center" });
-        pendingFocus.current = null;
-      }
-    } else if (pinned.current && filtered.length) {
-      virtualizer.scrollToIndex(filtered.length - 1, { align: "end" });
-    }
-  }, [scene?.cutoff, filtered.length, search, virtualizer.getTotalSize()]);
+  const transcriptReady = useTranscriptPosition({
+    sceneReady: !!scene,
+    filtered,
+    virtualizer,
+    scroll,
+    pinned,
+    pendingFocus,
+    search,
+  });
   const action = async (path: string) => {
     try {
       await api(`/sessions/${id}/${path}`, "POST");
@@ -223,7 +227,8 @@ export function useSceneController({
       memory_cutoff: scene?.cutoff || 0,
     });
   const charName = (charId: string) =>
-    scene?.characters.find((c: Data) => c.id === charId)?.name || "Narrator";
+    scene?.characters.find((c: Data) => c.id === charId)?.name ||
+    tr("characters.narrator");
   const active = requests.filter((r) =>
     ["queued", "requesting", "reasoning", "speaking", "backoff"].includes(
       r.status,
@@ -236,6 +241,11 @@ export function useSceneController({
     : 0;
 
   return {
+    transcriptReady,
+    detailError,
+    detailLoading,
+    retryDetail,
+    loadError,
     id,
     boot,
     refresh,

@@ -1,4 +1,5 @@
 import { ChevronDown, Compass, Search } from "lucide-react";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { Composer } from "./Composer";
 import { Message } from "./Message";
@@ -21,13 +22,14 @@ export function Conversation({ model }: { model: SceneModel }) {
     manualScrollUntil,
     filtered,
     virtualizer,
+    transcriptReady,
   } = model;
 
   return (
     <>
       <section className="conversation">
         <div className="transcript-toolbar">
-          <span>PUBLIC CONVERSATION</span>
+          <span>{tr("chat.publicConversation")}</span>
           {scene.messages.length >= 200 && (
             <button
               className="text-button quiet"
@@ -43,30 +45,40 @@ export function Conversation({ model }: { model: SceneModel }) {
                     ...scene,
                     messages: [...rows, ...scene.messages],
                   });
-                  if (!rows.length) notify("Beginning of conversation reached");
+                  if (!rows.length)
+                    notify(tr("chat.beginningOfConversationReached"));
                 } catch (e) {
                   fail(e);
                 }
               }}
             >
-              Earlier messages
+              {tr("chat.earlierMessages")}
             </button>
           )}
           <label>
             <Search size={14} />
             <input
-              aria-label="Search loaded messages"
-              placeholder="Find in conversation"
+              aria-label={tr("chat.searchLoadedMessages")}
+              placeholder={tr("chat.findInConversation")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </label>
         </div>
+        {!transcriptReady && (
+          <div className="transcript-loading" role="status">
+            {tr("chat.loadingLatest")}
+          </div>
+        )}
         <div
           className="transcript"
+          role="region"
+          aria-busy={!transcriptReady}
+          data-ready={transcriptReady}
+          style={{ visibility: transcriptReady ? "visible" : "hidden" }}
           ref={scroll}
           tabIndex={0}
-          aria-label="Conversation transcript"
+          aria-label={tr("chat.conversationTranscript")}
           onWheel={() => {
             manualScrollUntil.current = Date.now() + 1500;
           }}
@@ -93,11 +105,15 @@ export function Conversation({ model }: { model: SceneModel }) {
           {!filtered.length && (
             <div className="empty-scene">
               <Compass size={38} />
-              <h2>{search ? "No matching messages" : "No messages yet"}</h2>
+              <h2>
+                {search
+                  ? tr("chat.noMatchingMessages")
+                  : tr("chat.noMessagesYet")}
+              </h2>
               <p>
                 {search
-                  ? "Try another name or phrase."
-                  : "Resume the session to let the characters speak, or add a voice of your own."}
+                  ? tr("chat.tryAnotherNameOrPhrase")
+                  : tr("chat.resumeTheSessionToLetTheCharactersSpeak")}
               </p>
             </div>
           )}
@@ -139,7 +155,8 @@ export function Conversation({ model }: { model: SceneModel }) {
               });
             }}
           >
-            {newCount} new messages
+            {newCount}
+            {tr("chat.newMessages")}
             <ChevronDown size={14} />
           </button>
         )}

@@ -1,15 +1,13 @@
-import { Field } from "../../components/ui";
+import { Checkbox, Field } from "../../components/ui";
+import { tr } from "../../i18n";
 import type { SettingsSectionProps } from "./types";
 export function MemorySettings({ form, set }: SettingsSectionProps) {
   return (
     <>
-      <h2>Context and memory</h2>
-      <p>
-        The full transcript remains on disk. Each character retains a private
-        first-person memory and a recent observation tail.
-      </p>
+      <h2>{tr("settings.memory.contextAndMemory")}</h2>
+      <p>{tr("settings.memory.theFullTranscriptRemainsOnDiskEachCharacter")}</p>
       <div className="form-grid">
-        <Field label="Compaction threshold (%)">
+        <Field label={tr("settings.compactionThreshold")}>
           <input
             type="number"
             min="15"
@@ -18,7 +16,7 @@ export function MemorySettings({ form, set }: SettingsSectionProps) {
             onChange={(e) => set("compact_ratio", Number(e.target.value) / 100)}
           />
         </Field>
-        <Field label="Memory target in words">
+        <Field label={tr("settings.memory.memoryTargetInWords")}>
           <input
             type="number"
             value={form.memory_words}
@@ -26,8 +24,8 @@ export function MemorySettings({ form, set }: SettingsSectionProps) {
           />
         </Field>
         <Field
-          label="Working context ceiling"
-          hint="0 uses the provider's configured full context capacity."
+          label={tr("settings.workingContextCeiling")}
+          hint={tr("settings.memory.0UsesTheProviderSConfiguredFullContext")}
         >
           <input
             type="number"
@@ -36,24 +34,21 @@ export function MemorySettings({ form, set }: SettingsSectionProps) {
           />
         </Field>
       </div>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={form.include_model_time}
-          onChange={(e) => set("include_model_time", e.target.checked)}
-        />
-        Include a 24-hour clock in model-visible observations
-      </label>
-      <Field label="Model time zone">
+      <Checkbox
+        checked={form.include_model_time}
+        onChange={(e) => set("include_model_time", e.target.checked)}
+        label={tr("settings.memory.includeA24HourClockInModelVisible")}
+      />
+      <Field label={tr("settings.memory.modelTimeZone")}>
         <input
           value={form.timezone}
           onChange={(e) => set("timezone", e.target.value)}
         />
       </Field>
       <div className="info-box">
-        Checkpoint files live under
-        data/sessions/[session]/characters/[character]/. Failed compaction keeps
-        the prior valid memory.
+        {tr(
+          "settings.memory.checkpointFilesLiveUnderDataSessionsSessionCharacters",
+        )}
       </div>
     </>
   );

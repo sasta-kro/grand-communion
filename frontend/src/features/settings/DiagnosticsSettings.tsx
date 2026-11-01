@@ -1,26 +1,29 @@
-import { Field } from "../../components/ui";
+import { Checkbox, Field } from "../../components/ui";
+import { tr } from "../../i18n";
 import type { SettingsSectionProps } from "./types";
 export function DiagnosticsSettings({ form, set }: SettingsSectionProps) {
   return (
     <>
-      <h2>Diagnostics</h2>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={form.capture_reasoning}
-          onChange={(e) => set("capture_reasoning", e.target.checked)}
-        />
-        Capture provider-returned reasoning for the private inspector
-      </label>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={form.show_reasoning_in_chat}
-          onChange={(e) => set("show_reasoning_in_chat", e.target.checked)}
-        />
-        Show reasoning-inspector links alongside dialogue
-      </label>
-      <Field label="Reasoning storage limit per request, in characters">
+      <h2>{tr("diagnostics.diagnostics")}</h2>
+      <Checkbox
+        checked={form.capture_reasoning}
+        onChange={(e) => set("capture_reasoning", e.target.checked)}
+        label={tr(
+          "settings.diagnostics.captureProviderReturnedReasoningForThePrivateInspector",
+        )}
+      />
+      <Checkbox
+        checked={form.show_reasoning_in_chat}
+        onChange={(e) => set("show_reasoning_in_chat", e.target.checked)}
+        label={tr(
+          "settings.diagnostics.showReasoningInspectorLinksAlongsideDialogue",
+        )}
+      />
+      <Field
+        label={tr(
+          "settings.diagnostics.reasoningStorageLimitPerRequestInCharacters",
+        )}
+      >
         <input
           type="number"
           value={form.reasoning_limit}
@@ -28,9 +31,9 @@ export function DiagnosticsSettings({ form, set }: SettingsSectionProps) {
         />
       </Field>
       <div className="info-box">
-        Reasoning effort belongs to each provider profile. Hiding reasoning does
-        not reduce inference effort. Estimates and reported token usage are
-        labeled separately.
+        {tr(
+          "settings.diagnostics.reasoningEffortBelongsToEachProviderProfileHiding",
+        )}
       </div>
     </>
   );

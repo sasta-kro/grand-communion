@@ -1,4 +1,7 @@
 import { Compass } from "lucide-react";
+import { Button } from "../../components/ui";
+import { tr } from "../../i18n";
+import { go } from "../../lib/navigation";
 import { ScenePageProps } from "../../lib/types";
 import { CastDialog } from "./CastDialog";
 import { CharacterDialog } from "./CharacterDialog";
@@ -13,11 +16,24 @@ import { SceneModel, useSceneController } from "./useSceneController";
 
 export function Scene(props: ScenePageProps) {
   const controller = useSceneController(props);
+  if (!controller.scene && controller.loadError)
+    return (
+      <div className="empty-state" role="alert">
+        <h1>{tr("scene.cannotOpenThisSession")}</h1>
+        <p>{controller.loadError}</p>
+        <div className="row">
+          <Button onClick={controller.load}>{tr("common.retry")}</Button>
+          <Button onClick={() => go("/sessions")}>
+            {tr("app.goToSessions")}
+          </Button>
+        </div>
+      </div>
+    );
   if (!controller.scene)
     return (
       <div className="loading">
         <Compass size={30} />
-        <p>Opening scene...</p>
+        <p>{tr("scene.openingScene")}</p>
       </div>
     );
   const model: SceneModel = { ...controller, scene: controller.scene };

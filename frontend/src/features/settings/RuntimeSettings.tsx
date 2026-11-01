@@ -1,44 +1,42 @@
-import { Field } from "../../components/ui";
+import { Checkbox, Field } from "../../components/ui";
+import { tr } from "../../i18n";
 import type { SettingsSectionProps } from "./types";
 export function RuntimeSettings({ form, set }: SettingsSectionProps) {
   return (
     <>
-      <h2>Timing and concurrency</h2>
-      <p>
-        Each cooldown sends the current board tail and that character's memory.
-        The model may speak or return no response.
-      </p>
+      <h2>{tr("settings.runtime.timingAndConcurrency")}</h2>
+      <p>{tr("settings.runtime.eachCooldownSendsTheCurrentBoardTailAnd")}</p>
       <div className="form-grid">
         {[
           [
             "cooldown",
-            "Default character cooldown",
-            "Seconds after a completed request.",
+            tr("settings.defaultCharacterCooldown"),
+            tr("settings.runtime.secondsAfterACompletedRequest"),
           ],
           [
             "global_gap",
-            "Global message gap",
-            "Minimum seconds between delivered speech parts.",
+            tr("settings.globalDeliveryGap"),
+            tr("settings.runtime.minimumSecondsBetweenDeliveredSpeechParts"),
           ],
           [
             "max_concurrency",
-            "Total request concurrency",
-            "Shared by dialogue, memory, and narration.",
+            tr("settings.runtime.totalRequestConcurrency"),
+            tr("settings.runtime.sharedByDialogueMemoryAndNarration"),
           ],
           [
             "character_slots",
-            "Character request slots",
-            "Leave room for maintenance requests.",
+            tr("settings.runtime.characterRequestSlots"),
+            tr("settings.runtime.leaveRoomForMaintenanceRequests"),
           ],
           [
             "word_limit",
-            "Words per message part",
-            "Long speech is split mechanically.",
+            tr("settings.wordsPerPart"),
+            tr("settings.runtime.longSpeechIsSplitMechanically"),
           ],
           [
             "max_parts",
-            "Maximum parts per utterance",
-            "Bounds the delivery queue.",
+            tr("settings.maximumSpeechParts"),
+            tr("settings.runtime.boundsTheDeliveryQueue"),
           ],
         ].map(([key, label, hint]) => (
           <Field label={label} hint={hint} key={key}>
@@ -53,17 +51,15 @@ export function RuntimeSettings({ form, set }: SettingsSectionProps) {
           </Field>
         ))}
       </div>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={form.auto_resume}
-          onChange={(e) => set("auto_resume", e.target.checked)}
-        />
-        Automatically resume running worlds after a backend restart
-      </label>
+      <Checkbox
+        checked={form.auto_resume}
+        onChange={(e) => set("auto_resume", e.target.checked)}
+        label={tr(
+          "settings.runtime.automaticallyResumeRunningWorldsAfterABackendRestart",
+        )}
+      />
       <p className="quiet">
-        By default, a backend restart restores worlds paused. Closing the
-        browser or navigating away never pauses a running session.
+        {tr("settings.runtime.byDefaultABackendRestartRestoresWorldsPaused")}
       </p>
     </>
   );

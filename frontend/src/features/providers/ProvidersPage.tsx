@@ -1,20 +1,37 @@
 import { Plug, Plus, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
-import { Badge, Button, Field, Modal, PageHeading } from "../../components/ui";
+import { HelpLabel } from "../../components/HelpLabel";
+import {
+  Badge,
+  Button,
+  Checkbox,
+  Field,
+  Modal,
+  PageHeading,
+} from "../../components/ui";
+import { tr, type MessageKey } from "../../i18n";
 import { api } from "../../lib/api";
 import { fmt } from "../../lib/format";
 import { Data, PageProps } from "../../lib/types";
 
 export function Providers({ boot, refresh, fail, notify }: PageProps) {
   const [edit, setEdit] = useState<Data | null>(null);
+  const effortKeys: Record<string, MessageKey> = {
+    auto: "providers.effort.auto",
+    low: "providers.effort.low",
+    high: "providers.effort.high",
+    max: "providers.effort.max",
+  };
   const field = (key: string, value: any) =>
     setEdit((e: Data | null) => ({ ...e, [key]: value }));
   return (
     <div className="page">
       <PageHeading
         eyebrow=""
-        title="Providers"
-        description="Provider details stay separate from characters, scenes, and memory."
+        title={tr("navigation.providers")}
+        description={tr(
+          "providers.providerDetailsStaySeparateFromCharactersScenesAnd",
+        )}
         action={
           <Button
             primary
@@ -37,7 +54,7 @@ export function Providers({ boot, refresh, fail, notify }: PageProps) {
             }
           >
             <Plus size={17} />
-            Add provider
+            {tr("providers.addProvider")}
           </Button>
         }
       />
@@ -51,21 +68,40 @@ export function Providers({ boot, refresh, fail, notify }: PageProps) {
             <h2>{p.name}</h2>
             <p className="model-name">{p.model}</p>
             <dl>
-              <dt>Protocol</dt>
+              <dt>
+                <HelpLabel label={tr("providers.protocol")} />
+              </dt>
               <dd>
-                {p.protocol === "openai" ? "OpenAI-compatible" : p.protocol}
+                {p.protocol === "openai"
+                  ? tr("providers.openaiCompatible")
+                  : p.protocol}
               </dd>
-              <dt>Context</dt>
-              <dd>{fmt(p.context_tokens)} tokens</dd>
-              <dt>Reasoning</dt>
+              <dt>
+                <HelpLabel label={tr("providers.context")} />
+              </dt>
               <dd>
-                {p.supports_effort ? p.reasoning_effort : "Provider default"}
+                {tr("providers.tokens", { count: fmt(p.context_tokens) })}
               </dd>
-              <dt>Concurrency</dt>
-              <dd>{p.concurrency} requests</dd>
+              <dt>
+                <HelpLabel
+                  label={tr("providers.reasoningEffort")}
+                  help={tr("help.reasoningEffort")}
+                />
+              </dt>
+              <dd>
+                {p.supports_effort
+                  ? tr(effortKeys[p.reasoning_effort])
+                  : tr("providers.providerDefault")}
+              </dd>
+              <dt>
+                <HelpLabel label={tr("providers.concurrency")} />
+              </dt>
+              <dd>
+                {tr("providers.requests", { concurrency: p.concurrency })}
+              </dd>
             </dl>
             <Button onClick={() => setEdit({ ...p, api_key: "" })}>
-              Configure
+              {tr("providers.configure")}
               <SlidersHorizontal size={15} />
             </Button>
           </article>
@@ -73,19 +109,21 @@ export function Providers({ boot, refresh, fail, notify }: PageProps) {
       </div>
       {edit && (
         <Modal
-          title="Provider settings"
-          subtitle="Credentials remain local and never appear in character context or save files."
+          title={tr("providers.providerSettings")}
+          subtitle={tr(
+            "providers.credentialsRemainLocalAndNeverAppearInCharacter",
+          )}
           wide
           onClose={() => setEdit(null)}
         >
           <div className="form-grid">
-            <Field label="Display name">
+            <Field label={tr("providers.displayName")}>
               <input
                 value={edit.name}
                 onChange={(e) => field("name", e.target.value)}
               />
             </Field>
-            <Field label="Protocol">
+            <Field label={tr("providers.protocol")}>
               <select
                 value={edit.protocol}
                 onChange={(e) =>
@@ -102,29 +140,31 @@ export function Providers({ boot, refresh, fail, notify }: PageProps) {
                   })
                 }
               >
-                <option value="openai">OpenAI-compatible</option>
-                <option value="ollama">Ollama native</option>
-                <option value="mock">Mock laboratory</option>
+                <option value="openai">
+                  {tr("providers.openaiCompatible")}
+                </option>
+                <option value="ollama">{tr("providers.ollamaNative")}</option>
+                <option value="mock">{tr("providers.mockLaboratory")}</option>
               </select>
             </Field>
-            <Field label="Base URL">
+            <Field label={tr("providers.baseUrl")}>
               <input
                 value={edit.base_url}
                 onChange={(e) => field("base_url", e.target.value)}
               />
             </Field>
-            <Field label="Model ID">
+            <Field label={tr("providers.modelId")}>
               <input
                 value={edit.model}
                 onChange={(e) => field("model", e.target.value)}
               />
             </Field>
             <Field
-              label="API key"
+              label={tr("providers.apiKey")}
               hint={
                 edit.configured
-                  ? "A credential is already available. Leave blank to keep it."
-                  : "Optional for a local server."
+                  ? tr("providers.aCredentialIsAlreadyAvailableLeaveBlankTo")
+                  : tr("providers.optionalForALocalServer")
               }
             >
               <input
@@ -135,8 +175,8 @@ export function Providers({ boot, refresh, fail, notify }: PageProps) {
               />
             </Field>
             <Field
-              label="Credential environment variable"
-              hint="AUTO uses the existing local key for the default GLM profile."
+              label={tr("providers.credentialEnvironmentVariable")}
+              hint={tr("providers.autoUsesTheExistingLocalKeyForThe")}
             >
               <input
                 value={edit.key_env}
@@ -144,10 +184,10 @@ export function Providers({ boot, refresh, fail, notify }: PageProps) {
               />
             </Field>
             {[
-              ["context_tokens", "Context capacity"],
-              ["max_output", "Output allowance, including reasoning"],
-              ["timeout", "Request timeout in seconds"],
-              ["concurrency", "Provider concurrency"],
+              ["context_tokens", tr("providers.contextCapacity")],
+              ["max_output", tr("providers.outputAllowanceIncludingReasoning")],
+              ["timeout", tr("providers.requestTimeoutInSeconds")],
+              ["concurrency", tr("providers.providerConcurrency")],
             ].map(([key, label]) => (
               <Field label={label} key={key}>
                 <input
@@ -158,33 +198,25 @@ export function Providers({ boot, refresh, fail, notify }: PageProps) {
               </Field>
             ))}
           </div>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={edit.requires_key ?? true}
-              onChange={(e) => field("requires_key", e.target.checked)}
-            />
-            Require an API credential for this endpoint
-          </label>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={edit.supports_effort}
-              onChange={(e) => field("supports_effort", e.target.checked)}
-            />
-            Send a supported reasoning effort parameter
-          </label>
+          <Checkbox
+            checked={edit.requires_key ?? true}
+            onChange={(e) => field("requires_key", e.target.checked)}
+            label={tr("providers.requireAnApiCredentialForThisEndpoint")}
+          />
+          <Checkbox
+            checked={edit.supports_effort}
+            onChange={(e) => field("supports_effort", e.target.checked)}
+            label={tr("providers.sendASupportedReasoningEffortParameter")}
+          />
           {edit.supports_effort && (
-            <Field label="Reasoning effort">
+            <Field label={tr("providers.reasoningEffort")}>
               <select
                 value={edit.reasoning_effort}
                 onChange={(e) => field("reasoning_effort", e.target.value)}
               >
                 {["auto", "low", "high", "max"].map((x) => (
                   <option key={x} value={x}>
-                    {x === "auto"
-                      ? "Auto (provider default)"
-                      : x[0].toUpperCase() + x.slice(1)}
+                    {tr(effortKeys[x])}
                   </option>
                 ))}
               </select>
@@ -199,13 +231,13 @@ export function Providers({ boot, refresh, fail, notify }: PageProps) {
                   await api("/providers/" + edit.id, "PUT", edit);
                   setEdit(null);
                   await refresh();
-                  notify("Provider saved");
+                  notify(tr("providers.providerSaved"));
                 } catch (e) {
                   fail(e);
                 }
               }}
             >
-              Save provider
+              {tr("providers.saveProvider")}
             </Button>
           </div>
         </Modal>

@@ -1,6 +1,7 @@
 import { ArrowUpRight, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button, Field, Modal, PageHeading } from "../../components/ui";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { color, initials } from "../../lib/format";
 import { Data, PageProps } from "../../lib/types";
@@ -28,8 +29,8 @@ export function Scenarios({
     <div className="page">
       <PageHeading
         eyebrow=""
-        title="Scenarios"
-        description="Edit the setting, characters, and activity used to create new sessions."
+        title={tr("navigation.scenarios")}
+        description={tr("scenarios.editTheSettingCharactersAndActivityUsedTo")}
         action={
           <Button
             primary
@@ -45,14 +46,16 @@ export function Scenarios({
             }
           >
             <Plus size={17} />
-            New scenario
+            {tr("scenarios.newScenario")}
           </Button>
         }
       />
       <div className="entity-grid">
         {boot.scenarios.map((s: Data) => (
           <article className="entity-card scenario-card" key={s.id}>
-            <span className="eyebrow">{s.cast.length} CHARACTERS</span>
+            <span className="eyebrow">
+              {tr("scenarios.characters", { length: s.cast.length })}
+            </span>
             <h2>{s.name}</h2>
             <p>{s.description}</p>
             <div className="mini-cast">
@@ -68,10 +71,10 @@ export function Scenarios({
             </div>
             <div className="row">
               <Button onClick={() => setEdit(structuredClone(s))}>
-                Edit setting
+                {tr("scenarios.editSetting")}
               </Button>
               <Button primary onClick={() => onCreateSession(s.id)}>
-                Start here
+                {tr("scenarios.startHere")}
                 <ArrowUpRight size={15} />
               </Button>
             </div>
@@ -80,18 +83,20 @@ export function Scenarios({
       </div>
       {edit && (
         <Modal
-          title="Edit scenario"
-          subtitle="Every character receives the shared setting and only their own private background."
+          title={tr("scenarios.editScenario")}
+          subtitle={tr(
+            "scenarios.everyCharacterReceivesTheSharedSettingAndOnly",
+          )}
           wide
           onClose={() => setEdit(null)}
         >
-          <Field label="Name">
+          <Field label={tr("common.name")}>
             <input
               value={edit.name}
               onChange={(e) => setEdit({ ...edit, name: e.target.value })}
             />
           </Field>
-          <Field label="Short description">
+          <Field label={tr("scenarios.shortDescription")}>
             <input
               value={edit.description}
               onChange={(e) =>
@@ -99,7 +104,7 @@ export function Scenarios({
               }
             />
           </Field>
-          <Field label="Shared opening premise">
+          <Field label={tr("scenarios.sharedOpeningPremise")}>
             <textarea
               rows={5}
               value={edit.premise}
@@ -107,8 +112,8 @@ export function Scenarios({
             />
           </Field>
           <Field
-            label="Ambient voice labels"
-            hint="Separate with commas. These labels do not imply a single recurring person."
+            label={tr("scenarios.ambientVoiceLabels")}
+            hint={tr("scenarios.separateWithCommasTheseLabelsDoNotImply")}
           >
             <input
               value={edit.ambient_voices.join(", ")}
@@ -123,7 +128,7 @@ export function Scenarios({
             />
           </Field>
           <div className="row between">
-            <h3>The cast</h3>
+            <h3>{tr("scenarios.theCast")}</h3>
             <Button
               onClick={() =>
                 setEdit({
@@ -144,13 +149,15 @@ export function Scenarios({
               }
             >
               <Plus size={14} />
-              Add character
+              {tr("scenarios.addCharacter")}
             </Button>
           </div>
           {edit.cast.map((c: Data, i: number) => (
             <div className="cast-editor" key={i}>
               <div className="row between">
-                <span className="eyebrow">CHARACTER {i + 1}</span>
+                <span className="eyebrow">
+                  {tr("scenarios.character", { value: i + 1 })}
+                </span>
                 <button
                   className="icon"
                   aria-label={"Remove character " + (i + 1)}
@@ -165,19 +172,19 @@ export function Scenarios({
                 </button>
               </div>
               <div className="form-grid">
-                <Field label="Name">
+                <Field label={tr("common.name")}>
                   <input
                     value={c.name}
                     onChange={(e) => updateCast(i, "name", e.target.value)}
                   />
                 </Field>
-                <Field label="Public role">
+                <Field label={tr("scenarios.publicRole")}>
                   <input
                     value={c.role}
                     onChange={(e) => updateCast(i, "role", e.target.value)}
                   />
                 </Field>
-                <Field label="Persona">
+                <Field label={tr("scenarios.persona")}>
                   <select
                     value={c.persona_id}
                     onChange={(e) =>
@@ -191,7 +198,7 @@ export function Scenarios({
                     ))}
                   </select>
                 </Field>
-                <Field label="Provider">
+                <Field label={tr("scenarios.provider")}>
                   <select
                     value={c.provider_id}
                     onChange={(e) =>
@@ -206,7 +213,7 @@ export function Scenarios({
                   </select>
                 </Field>
               </div>
-              <Field label="Private background">
+              <Field label={tr("scenarios.privateBackground")}>
                 <textarea
                   rows={2}
                   value={c.background}
@@ -229,13 +236,13 @@ export function Scenarios({
                   await api("/scenarios/" + edit.id, "PUT", edit);
                   setEdit(null);
                   await refresh();
-                  notify("Scenario saved");
+                  notify(tr("scenarios.scenarioSaved"));
                 } catch (e) {
                   fail(e);
                 }
               }}
             >
-              Save scenario
+              {tr("scenarios.saveScenario")}
             </Button>
           </div>
         </Modal>

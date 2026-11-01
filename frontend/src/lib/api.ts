@@ -1,3 +1,4 @@
+import { tr } from "../i18n";
 export async function api<T = any>(
   path: string,
   method = "GET",
@@ -13,7 +14,7 @@ export async function api<T = any>(
     throw new Error(
       typeof data.detail === "string"
         ? data.detail
-        : JSON.stringify(data.detail || "Request failed"),
+        : JSON.stringify(data.detail || tr("common.requestFailed")),
     );
   return data;
 }

@@ -1,5 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import { Button, Field, Modal } from "../../components/ui";
+import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { go } from "../../lib/navigation";
 import { Data, PageProps } from "../../lib/types";
@@ -25,31 +26,37 @@ export function NewSessionDialog({
 }) {
   return (
     <Modal
-      title="New session"
-      subtitle="A new conversation with its own history and memories."
+      title={tr("sessions.newSession")}
+      subtitle={tr("sessions.aNewConversationWithItsOwnHistoryAnd")}
       onClose={() => onClose()}
     >
-      <Field label="Scenario">
+      <Field label={tr("sessions.scenario")}>
         <select value={scenario} onChange={(e) => setScenario(e.target.value)}>
           {boot.scenarios.map((s: Data) => (
             <option value={s.id} key={s.id}>
-              {s.name} · {s.cast.length} characters
+              {tr("sessions.characters", {
+                name: s.name,
+                length: s.cast.length,
+              })}
             </option>
           ))}
         </select>
       </Field>
-      <Field label="Session name" hint="Leave blank to use the scenario name.">
+      <Field
+        label={tr("sessions.sessionName")}
+        hint={tr("sessions.leaveBlankToUseTheScenarioName")}
+      >
         <input
-          placeholder="Session name"
+          placeholder={tr("sessions.sessionName")}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
       </Field>
       <div className="info-box">
-        The session opens paused. You choose when its characters begin.
+        {tr("sessions.theSessionOpensPausedYouChooseWhenIts")}
       </div>
       <div className="actions">
-        <Button onClick={() => onClose()}>Cancel</Button>
+        <Button onClick={() => onClose()}>{tr("common.cancel")}</Button>
         <Button
           primary
           disabled={busy || !scenario}
@@ -67,7 +74,7 @@ export function NewSessionDialog({
             })
           }
         >
-          Create session
+          {tr("sessions.createSession")}
           <ArrowUpRight size={16} />
         </Button>
       </div>
