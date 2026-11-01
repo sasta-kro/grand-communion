@@ -19,7 +19,7 @@ python3 scripts/communion.py say SESSION_ID 'I see a light below.' --name Bystan
 python3 scripts/communion.py recap SESSION_ID
 ```
 
-Recap queues a narrator job. Read its result from `/sessions/SESSION_ID/recaps` or watch the event stream. The built-in scenario IDs are `lantern`, `observatory`, and `inn`. Use bootstrap to discover the current IDs instead of assuming they never change.
+Recap queues a narrator job. Read its result from `/sessions/SESSION_ID/recaps` or watch the event stream. The built-in scenario IDs are `lantern`, `observatory`, and `floodgate`. Use bootstrap to discover the current IDs instead of assuming they never change.
 
 Any JSON endpoint is accessible through the generic command. Omit the `/api` prefix or include it once.
 
