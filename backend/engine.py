@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from .models import Settings, Provider, Speech, NoResponse
-from .provider import Gateway, ProviderError, parse_json
+from .provider import Gateway, ProviderError, parse_json, cancellation_reason
 from .store import uid, now, encode
 
 
@@ -79,9 +79,12 @@ class Engine:
         for row in self.store.query("SELECT id FROM characters WHERE memory_rev=''"):
             self.store.ensure_memory(self.store.character(row["id"]))
         running = self.store.query("SELECT id FROM sessions WHERE status='running'")
-        self.store.execute(
-            "UPDATE requests SET status='interrupted' WHERE status IN ('queued','requesting','reasoning','speaking','backoff')"
-        )
+        for row in self.store.query(
+            "SELECT id FROM requests WHERE status IN ('queued','requesting','reasoning','speaking','backoff')"
+        ):
+            self.store.request_update(
+                row["id"], "interrupted", {"cancel_reason": "backend_restart"}
+            )
         self.store.execute("UPDATE characters SET phase='idle',next_due=0")
         self.store.execute(
             "UPDATE sessions SET status='paused',epoch=epoch+1 WHERE status='running'"
@@ -94,12 +97,12 @@ class Engine:
         # Preserve desired running status for optional restart recovery.
         for runtime in list(self.runtimes.values()):
             for task in runtime["tasks"]:
-                task.cancel()
+                task.cancel("server_shutdown")
         tasks = [t for r in self.runtimes.values() for t in r["tasks"]] + list(
             self.report_tasks
         )
         for task in self.report_tasks:
-            task.cancel()
+            task.cancel("server_shutdown")
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
         self.runtimes.clear()
@@ -142,7 +145,7 @@ class Engine:
         )
         self.store.event(id, "session", {"status": "running"})
 
-    async def pause(self, id):
+    async def pause(self, id, reason="session_paused"):
         self.store.execute(
             "UPDATE sessions SET status='paused',epoch=epoch+1,updated=? WHERE id=?",
             (now(), id),
@@ -150,7 +153,7 @@ class Engine:
         runtime = self.runtimes.pop(id, None)
         if runtime:
             for task in runtime["tasks"]:
-                task.cancel()
+                task.cancel(reason)
             await asyncio.gather(*runtime["tasks"], return_exceptions=True)
         self.store.execute(
             "UPDATE characters SET phase='idle',next_due=0 WHERE session_id=?", (id,)
@@ -287,7 +290,7 @@ class Engine:
                 not self.valid(session["id"], session["epoch"])
                 and session["status"] == "running"
             ):
-                raise asyncio.CancelledError()
+                raise asyncio.CancelledError("session_changed")
             memory = text.strip()
             self.store.write_memory(char, memory, batch[-1]["id"])
         self.store.log(
@@ -376,9 +379,9 @@ class Engine:
                         char_id,
                         request_id,
                     )
-            except asyncio.CancelledError:
+            except asyncio.CancelledError as error:
                 if request_id:
-                    self.store.request_update(request_id, "cancelled")
+                    self.store.cancel_request(request_id, cancellation_reason(error))
                 raise
             except Exception as error:
                 message = (

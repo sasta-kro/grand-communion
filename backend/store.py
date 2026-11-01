@@ -313,6 +313,24 @@ class Store:
         )
         self.event(row["session_id"], "request", {"id": id, "status": status})
 
+    def cancel_request(self, id, reason, reasoning=None):
+        row = self.one("SELECT created,status FROM requests WHERE id=?", (id,))
+        if not row or row["status"] == "cancelled":
+            return
+        self.request_update(
+            id,
+            "cancelled",
+            {
+                "cancel_reason": reason,
+                "cancelled_at": now(),
+                "elapsed_ms": round((now() - row["created"]) * 1000),
+                "published_parts": self.one(
+                    "SELECT COUNT(*) AS n FROM messages WHERE request_id=?", (id,)
+                )["n"],
+            },
+            reasoning=reasoning,
+        )
+
     def requests(self, id, limit=100):
         rows = self.query(
             "SELECT * FROM requests WHERE session_id=? ORDER BY created DESC LIMIT ?",

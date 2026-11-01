@@ -86,7 +86,9 @@ async def test_global_speech_rules_follow_settings_even_for_saved_worlds(app):
     cfg = engine.settings().model_copy(update={"speech_rules": "Use plain periods."})
     store.set_setting("settings", cfg.model_dump())
     snapshot = store.snapshot(id, "Rules test")
-    body = json.loads(store.one("SELECT body FROM snapshots WHERE id=?", (snapshot,))["body"])
+    body = json.loads(
+        store.one("SELECT body FROM snapshots WHERE id=?", (snapshot,))["body"]
+    )
     assert "speech_rules" not in body["session"]["config"]
     # Older or external saves cannot freeze their own copy of these rules.
     body["session"]["config"]["speech_rules"] = "Use obsolete punctuation."
@@ -95,7 +97,9 @@ async def test_global_speech_rules_follow_settings_even_for_saved_worlds(app):
     store.set_setting("settings", cfg.model_dump())
     for session_id in (id, restored):
         for char in store.characters(session_id):
-            context = engine.context(store.session(session_id), char, store.cutoff(session_id))
+            context = engine.context(
+                store.session(session_id), char, store.cutoff(session_id)
+            )
             assert cfg.speech_rules in context[0]["content"]
             assert "obsolete punctuation" not in context[0]["content"]
 
@@ -484,3 +488,51 @@ async def test_concurrent_recaps_reuse_the_same_completed_window(app):
         (store.root / "sessions" / id / "characters" / c["id"] / "memory.md").exists()
         for c in store.characters(id)
     )
+
+
+@pytest.mark.parametrize("queued", [False, True])
+async def test_cancellation_records_cause_and_http_state(app, queued):
+    store, engine = app.state.store, app.state.engine
+    session_id = make_session(app)
+    char = store.characters(session_id)[0]
+    profile = Provider(
+        id="test", base_url="https://provider.invalid", requires_key=False
+    )
+    context = engine.context(store.session(session_id), char, 0)
+    request_id = engine.begin(
+        store.session(session_id), char, "character", 0, context, profile
+    )
+    streaming = asyncio.Event()
+
+    class WaitingStream(httpx.AsyncByteStream):
+        async def __aiter__(self):
+            yield b'data: {"choices":[{"delta":{"reasoning_content":"A partial thought."}}]}\n\n'
+            streaming.set()
+            await asyncio.Event().wait()
+
+    async def respond(request):
+        return httpx.Response(200, stream=WaitingStream())
+
+    await engine.gateway.client.aclose()
+    engine.gateway.client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    if queued:
+        engine.gateway.limiter.active = engine.settings().max_concurrency
+    task = asyncio.create_task(
+        engine.gateway.generate(profile, context, "character", request_id)
+    )
+    if queued:
+        await asyncio.sleep(0)
+    else:
+        await asyncio.wait_for(streaming.wait(), 1)
+    task.cancel("session_paused")
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    row = next(row for row in store.requests(session_id) if row["id"] == request_id)
+    assert row["status"] == "cancelled"
+    assert row["metrics"]["cancel_reason"] == "session_paused"
+    assert row["metrics"]["elapsed_ms"] >= 0
+    if queued:
+        assert not row["metrics"].get("http_status")
+    else:
+        assert row["metrics"]["http_status"] == 200
+        assert "partial thought" in row["reasoning"]

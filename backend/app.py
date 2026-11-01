@@ -266,7 +266,7 @@ def create_app(data_dir=None):
         }
         running = session["status"] == "running"
         if running:
-            await app.state.engine.pause(id)
+            await app.state.engine.pause(id, "settings_changed")
         app.state.store.execute(
             "UPDATE sessions SET config=? WHERE id=?", (encode(overrides), id)
         )
@@ -287,7 +287,7 @@ def create_app(data_dir=None):
         config["persona"] = str(value.get("persona", char.get("persona", "")))
         running = session["status"] == "running"
         if running:
-            await engine.pause(id)
+            await engine.pause(id, "cast_changed")
         store.execute(
             "UPDATE characters SET body=? WHERE id=?", (encode(config), char_id)
         )
@@ -307,7 +307,7 @@ def create_app(data_dir=None):
             )
         running = session["status"] == "running"
         if running:
-            await engine.pause(id)
+            await engine.pause(id, "cast_changed")
         body = value.model_dump()
         persona = store.entity("personas", value.persona_id)
         body["persona"] = str(raw.get("persona", persona["prompt"] if persona else ""))

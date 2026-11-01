@@ -17,6 +17,23 @@ class ProviderError(Exception):
         self.retryable = retryable
 
 
+def cancellation_reason(error):
+    reason = error.args[0] if error.args else "task_cancelled"
+    return (
+        reason
+        if isinstance(reason, str)
+        and reason
+        in {
+            "session_paused",
+            "server_shutdown",
+            "settings_changed",
+            "cast_changed",
+            "session_changed",
+        }
+        else "task_cancelled"
+    )
+
+
 class Credentials:
     def __init__(self, root: Path, data: Path):
         self.env = {**dotenv_values(root / ".env"), **os.environ}
@@ -124,6 +141,13 @@ class Gateway:
         self.limiter = Limiter(settings)
 
     async def generate(self, profile: Provider, messages, kind, request_id):
+        try:
+            return await self._generate(profile, messages, kind, request_id)
+        except asyncio.CancelledError as error:
+            self.store.cancel_request(request_id, cancellation_reason(error))
+            raise
+
+    async def _generate(self, profile: Provider, messages, kind, request_id):
         started = time.monotonic()
         row = self.store.one(
             "SELECT session_id FROM requests WHERE id=?", (request_id,)
@@ -247,6 +271,11 @@ class Gateway:
                         headers=headers,
                         timeout=profile.timeout,
                     ) as response:
+                        self.store.request_update(
+                            request_id,
+                            "requesting",
+                            {"http_status": response.status_code},
+                        )
                         if response.status_code >= 400:
                             code = response.status_code
                             retryable = code in (408, 429, 500, 502, 503, 504)
@@ -364,8 +393,12 @@ class Gateway:
                         error="",
                     )
                     return content
-                except asyncio.CancelledError:
-                    self.store.request_update(request_id, "cancelled")
+                except asyncio.CancelledError as error:
+                    self.store.cancel_request(
+                        request_id,
+                        cancellation_reason(error),
+                        reasoning=self.credentials.redact(reasoning),
+                    )
                     raise
                 except (httpx.HTTPError, ProviderError, ValueError) as error:
                     retryable = isinstance(error, httpx.TransportError) or getattr(
@@ -392,7 +425,11 @@ class Gateway:
                             "backoff",
                             {
                                 "attempt": attempt + 1,
-                                "http_status": getattr(error, "code", None),
+                                **(
+                                    {"http_status": error.code}
+                                    if getattr(error, "code", None) is not None
+                                    else {}
+                                ),
                                 "failure_kind": failure_kind,
                             },
                             error=message,
@@ -417,7 +454,11 @@ class Gateway:
                                 "duration_ms": round(
                                     (time.monotonic() - started) * 1000
                                 ),
-                                "http_status": getattr(error, "code", None),
+                                **(
+                                    {"http_status": error.code}
+                                    if getattr(error, "code", None) is not None
+                                    else {}
+                                ),
                                 "failure_kind": failure_kind,
                             },
                             self.credentials.redact(reasoning),
