@@ -1,0 +1,141 @@
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+.sidebar {
+  width: 222px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 29px 18px;
+  background: #141819;
+}
+.brand {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding: 0 8px;
+  margin-bottom: 53px;
+  color: var(--accent);
+}
+.brand > span {
+  font-family: var(--serif);
+  font-size: 24px;
+  letter-spacing: -0.6px;
+}
+.brand small {
+  display: block;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 7px;
+  letter-spacing: 0.18em;
+  color: #92a19c;
+  margin-top: 7px;
+}
+.nav-caption {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: #6e7c7a;
+  font-weight: 600;
+  margin: 0 14px 14px;
+}
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+nav a {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  font-size: 13px;
+  color: #a6b1ae;
+  padding: 12px 14px;
+  border-radius: 5px;
+}
+nav a:hover {
+  background: #202727;
+  color: #e5e7e1;
+}
+nav a.selected {
+  background: #2b3430;
+  color: var(--accent);
+}
+nav a span {
+  margin-left: auto;
+  font-size: 10px;
+}
+nav .nav-caption {
+  margin-top: 30px;
+}
+.sidebar-bottom {
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+  padding: 22px 8px 0;
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: #c1c9c1;
+}
+.sidebar-bottom small {
+  display: block;
+  font-size: 9px;
+  color: #71807c;
+  margin-top: 5px;
+}
+.dot {
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #74817c;
+  display: inline-block;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.dot.live {
+  background: #c6d6a4;
+}
+main {
+  flex: 1;
+  min-width: 0;
+  padding: 34px 46px 60px;
+  max-width: 1700px;
+}
+.page {
+  padding-top: 0;
+}
+.page-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 36px;
+}
+.eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  font-weight: 600;
+}
+.quiet {
+  color: var(--muted);
+  font-size: 12px;
+}
+.tiny {
+  font-size: 10px;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  margin: 18px 0 34px;
+}
+.page-heading p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 0;
+  max-width: 680px;
+}

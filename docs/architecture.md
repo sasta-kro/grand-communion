@@ -18,7 +18,22 @@ The main modules are:
 | `backend/store.py` | SQLite access, memory files, snapshots and restore |
 | `backend/models.py` | Pydantic schemas and default prompts |
 | `backend/seed.py` | Initial scenarios, personas, and provider profiles |
-| `frontend/src/main.tsx` | Browser UI and HTTP client |
+| `frontend/src/main.tsx` | Mount the React application and load styles |
+| `frontend/src/App.tsx` | Route selection, bootstrap state, notifications, session creation |
+| `frontend/src/features/` | Pages and components grouped by application feature |
+| `frontend/src/components/` | Shared controls, navigation, and charts |
+| `frontend/src/lib/` | HTTP client, API data types, formatting, and navigation helpers |
+| `frontend/src/styles/` | Styles separated into base, layout, controls, features, and responsive rules |
+
+## Frontend structure
+
+Each feature owns its page and local editors. Settings tabs are separate components. The scene is composed from `SceneHeader`, `CharacterRoster`, `Conversation`, `Composer`, `Message`, `DiagnosticsPanel`, and individual dialogs for character editing, scene settings, recaps, saves, and the mobile cast list.
+
+`useSceneController` coordinates the current scene, transcript virtualization, and local UI state. `useSessionEvents` owns the event-stream subscription and its cleanup. `useRequestDetails` polls only the selected diagnostic request. These hooks observe and control the server; they do not schedule character turns in the browser.
+
+Core API records have shared TypeScript interfaces in `lib/types.ts`. Field-driven form drafts and provider-specific diagnostic payloads retain a dynamic record type. Shared controls have explicit React prop types. Type checking also rejects unused imports and variables.
+
+Run `npm --prefix frontend run build` for type checking and the production bundle, `npm --prefix frontend run typecheck` for types alone, and `npm --prefix frontend run format` to apply the project's pinned Prettier formatter. `format:check` verifies formatting without modifying files.
 
 ## Python terms in this project
 
