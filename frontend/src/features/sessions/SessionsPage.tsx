@@ -6,6 +6,11 @@ import { api } from "../../lib/api";
 import { date, fmt } from "../../lib/format";
 import { go } from "../../lib/navigation";
 import type { PageProps } from "../../lib/types";
+import {
+  ArchiveFilter,
+  ItemManagement,
+  useArchiveList,
+} from "../../components/ItemManagement";
 
 const scenarioIcons: Record<string, IconName> = {
   lantern: "lantern",
@@ -18,12 +23,15 @@ export function SessionsPage({
   newSession,
   run,
   refresh,
+  fail,
   onSelectScenario,
 }: PageProps & {
   newSession: () => void;
   run: (fn: () => Promise<unknown>) => Promise<void>;
   onSelectScenario: (id: string) => void;
 }) {
+  const { archived, setArchived, items, loading, error, retry } =
+    useArchiveList("sessions", boot.sessions, fail);
   return (
     <>
       <PageHeading
@@ -37,7 +45,13 @@ export function SessionsPage({
           </Button>
         }
       />
-      {boot.sessions.length === 0 ? (
+      <ArchiveFilter archived={archived} setArchived={setArchived} />
+      {loading && <p role="status">{tr("lifecycle.loadingArchive")}</p>}
+      {error && <Button onClick={retry}>{tr("common.retry")}</Button>}
+      {archived && !loading && !error && !items.length && (
+        <p className="empty-state">{tr("lifecycle.archiveEmpty")}</p>
+      )}
+      {!archived && items.length === 0 ? (
         <div className="welcome">
           <Icon name="chat" size={36} />
           <h2>{tr("sessions.noSessionsYet")}</h2>
@@ -49,7 +63,7 @@ export function SessionsPage({
         </div>
       ) : (
         <div className="session-grid">
-          {boot.sessions.map((session) => (
+          {items.map((session) => (
             <article className="session-card" key={session.id}>
               <div className="session-summary">
                 <Icon name="chat" size={26} />
@@ -83,29 +97,37 @@ export function SessionsPage({
                   {tr("sessions.openChat")}
                   <ArrowRight size={15} />
                 </Button>
-                <button
-                  title={
-                    session.status === "running"
-                      ? tr("sessions.pauseSession")
-                      : tr("sessions.resumeSession")
-                  }
-                  className="icon"
-                  onClick={() =>
-                    run(async () => {
-                      await api(
-                        `/sessions/${session.id}/${session.status === "running" ? "pause" : "start"}`,
-                        "POST",
-                      );
-                      await refresh();
-                    })
-                  }
-                >
-                  {session.status === "running" ? (
-                    <Pause size={19} />
-                  ) : (
-                    <Play size={19} />
-                  )}
-                </button>
+                {!archived && (
+                  <button
+                    title={
+                      session.status === "running"
+                        ? tr("sessions.pauseSession")
+                        : tr("sessions.resumeSession")
+                    }
+                    className="icon"
+                    onClick={() =>
+                      run(async () => {
+                        await api(
+                          `/sessions/${session.id}/${session.status === "running" ? "pause" : "start"}`,
+                          "POST",
+                        );
+                        await refresh();
+                      })
+                    }
+                  >
+                    {session.status === "running" ? (
+                      <Pause size={19} />
+                    ) : (
+                      <Play size={19} />
+                    )}
+                  </button>
+                )}
+                <ItemManagement
+                  kind="sessions"
+                  item={session}
+                  archived={archived}
+                  changed={refresh}
+                />
               </div>
             </article>
           ))}

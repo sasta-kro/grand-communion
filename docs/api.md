@@ -84,6 +84,8 @@ Request diagnostic metrics now record `http_status` as soon as provider response
 
 Session-detail and message-list responses include `reply_preview` for each message. It is either null or an object with the original public message's `id`, `name`, `text` (up to 260 characters), and `truncated` flag. References are resolved within the same session, even if the original falls outside the requested history page. These excerpts are UI metadata and do not change model context or stored messages.
 
+Archive, restore, rename, permanent deletion, character removal, and message-point forks are documented in [archives, deletion, and forks](lifecycle.md). The CLI supports `archive`, `unarchive`, `delete --yes`, `fork --at`, and generic DELETE requests. Scenario cast members can now supply inline `persona` text, with null retaining template lookup.
+
 ## Future in-app assistant
 
 An assistant could use this API through a small set of tools for inspecting and editing scenarios, personas, characters, and settings. It would edit validated application data through the same service as the interface. It would not need to rewrite its own runtime code. Such an assistant is not included yet.

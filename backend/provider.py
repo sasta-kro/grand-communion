@@ -5,8 +5,10 @@ import random
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+
 import httpx
 from dotenv import dotenv_values
+
 from .models import Provider
 from .writing_policy import WritingPolicy, tokens
 
@@ -30,6 +32,8 @@ def cancellation_reason(error):
             "settings_changed",
             "cast_changed",
             "session_changed",
+            "session_archived",
+            "session_deleted",
         }
         else "task_cancelled"
     )

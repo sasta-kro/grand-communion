@@ -5,9 +5,10 @@ import re
 import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from .models import Settings, Provider, Speech, NoResponse, GLOBAL_AI_FIELDS
-from .provider import Gateway, ProviderError, parse_json, cancellation_reason
-from .store import uid, now, encode
+
+from .models import GLOBAL_AI_FIELDS, NoResponse, Provider, Settings, Speech
+from .provider import Gateway, ProviderError, cancellation_reason, parse_json
+from .store import encode, now, uid
 from .writing_policy import WritingPolicy, tokens
 
 
@@ -89,6 +90,11 @@ class Engine:
         self.store.execute(
             "UPDATE sessions SET status='paused',epoch=epoch+1 WHERE status='running'"
         )
+        for row in self.store.query("SELECT id FROM sessions"):
+            if not self.store.one(
+                "SELECT id FROM state_history WHERE session_id=? LIMIT 1", (row["id"],)
+            ):
+                self.store.record_state(row["id"])
         if self.settings().auto_resume:
             for session in running:
                 await self.start(session["id"])
@@ -109,6 +115,8 @@ class Engine:
         await self.gateway.client.aclose()
 
     async def start(self, id):
+        if self.store.archived("sessions", id):
+            raise ValueError("Restore this session from the archive before starting it")
         if id in self.runtimes:
             return
         session = self.store.session(id)
@@ -438,6 +446,10 @@ class Engine:
             runtime["queue"].task_done()
 
     async def inject(self, session, value):
+        if self.store.archived("sessions", session["id"]):
+            raise ValueError(
+                "Restore this session from the archive before adding speech"
+            )
         chars = self.store.characters(session["id"])
         char = next((c for c in chars if c["id"] == value.author_id), None)
         name = char["name"] if char else value.name

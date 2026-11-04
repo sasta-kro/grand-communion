@@ -1,0 +1,48 @@
+.archive-filter {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+.management-section {
+  padding-top: 18px;
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.management-section p {
+  color: var(--muted);
+}
+.button.danger {
+  color: #edb0a8;
+  border-color: #85504a;
+  background: #342321;
+}
+.button.danger:hover:not(:disabled) {
+  background: #49302d;
+}
+.entity-card .item-manage {
+  margin-left: 8px;
+}
+.message-fork {
+  opacity: 0.65;
+  padding: 2px;
+}
+.message-fork:hover,
+.message-fork:focus-visible {
+  opacity: 1;
+  color: var(--accent);
+}
+.fork-warning {
+  padding: 10px 12px;
+  color: #e0c490;
+  border-left: 3px solid #a48957;
+  background: #2b271e;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.scene-header .fork-warning {
+  max-width: 580px;
+  margin: 8px 0 0;
+}
+.scene-header:has(.fork-warning) {
+  flex-wrap: wrap;
+}

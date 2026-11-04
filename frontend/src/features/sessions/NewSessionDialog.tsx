@@ -53,7 +53,16 @@ export function NewSessionDialog({
         />
       </Field>
       <div className="info-box">
-        {tr("sessions.theSessionOpensPausedYouChooseWhenIts")}
+        {boot.scenarios.length ? (
+          tr("sessions.theSessionOpensPausedYouChooseWhenIts")
+        ) : (
+          <>
+            {tr("lifecycle.noScenarios")}{" "}
+            <a href="#/scenarios" onClick={onClose}>
+              {tr("navigation.scenarios")}
+            </a>
+          </>
+        )}
       </div>
       <div className="actions">
         <Button onClick={() => onClose()}>{tr("common.cancel")}</Button>

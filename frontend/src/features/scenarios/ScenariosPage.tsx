@@ -5,6 +5,11 @@ import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { color, initials } from "../../lib/format";
 import { Data, PageProps } from "../../lib/types";
+import {
+  ArchiveFilter,
+  ItemManagement,
+  useArchiveList,
+} from "../../components/ItemManagement";
 
 export function Scenarios({
   boot,
@@ -14,6 +19,8 @@ export function Scenarios({
   onCreateSession,
 }: PageProps & { onCreateSession: (id: string) => void }) {
   const [edit, setEdit] = useState<Data | null>(null);
+  const { archived, setArchived, items, loading, error, retry } =
+    useArchiveList("scenarios", boot.scenarios, fail);
   const updateCast = (i: number, key: string, value: any) =>
     setEdit((s: Data | null) =>
       s
@@ -50,8 +57,16 @@ export function Scenarios({
           </Button>
         }
       />
+      <ArchiveFilter archived={archived} setArchived={setArchived} />
+      {loading && <p role="status">{tr("lifecycle.loadingArchive")}</p>}
+      {error && <Button onClick={retry}>{tr("common.retry")}</Button>}
+      {!loading && !error && !items.length && (
+        <p className="empty-state">
+          {tr(archived ? "lifecycle.archiveEmpty" : "lifecycle.libraryEmpty")}
+        </p>
+      )}
       <div className="entity-grid">
-        {boot.scenarios.map((s: Data) => (
+        {items.map((s: Data) => (
           <article className="entity-card scenario-card" key={s.id}>
             <span className="eyebrow">
               {tr("scenarios.characters", { length: s.cast.length })}
@@ -73,10 +88,20 @@ export function Scenarios({
               <Button onClick={() => setEdit(structuredClone(s))}>
                 {tr("scenarios.editSetting")}
               </Button>
-              <Button primary onClick={() => onCreateSession(s.id)}>
+              <Button
+                primary
+                disabled={archived}
+                onClick={() => onCreateSession(s.id)}
+              >
                 {tr("scenarios.startHere")}
                 <ArrowUpRight size={15} />
               </Button>
+              <ItemManagement
+                kind="scenarios"
+                item={{ id: s.id, name: s.name }}
+                archived={archived}
+                changed={refresh}
+              />
             </div>
           </article>
         ))}
@@ -188,9 +213,31 @@ export function Scenarios({
                   <select
                     value={c.persona_id}
                     onChange={(e) =>
-                      updateCast(i, "persona_id", e.target.value)
+                      setEdit({
+                        ...edit,
+                        cast: edit.cast.map((member: Data, j: number) =>
+                          j === i
+                            ? {
+                                ...member,
+                                persona_id: e.target.value,
+                                persona: e.target.value
+                                  ? null
+                                  : member.persona || "",
+                              }
+                            : member,
+                        ),
+                      })
                     }
                   >
+                    <option value="">
+                      {tr("characters.customPersonality")}
+                    </option>
+                    {c.persona_id &&
+                      !boot.personas.some((p) => p.id === c.persona_id) && (
+                        <option value={c.persona_id}>
+                          {tr("lifecycle.archivedPersona")}
+                        </option>
+                      )}
                     {boot.personas.map((p: Data) => (
                       <option key={p.id} value={p.id}>
                         {p.name}
@@ -213,6 +260,17 @@ export function Scenarios({
                   </select>
                 </Field>
               </div>
+              {!c.persona_id && (
+                <Field
+                  label={tr("characters.personalityInThisCharacterSOwnWords")}
+                >
+                  <textarea
+                    value={c.persona || ""}
+                    rows={3}
+                    onChange={(e) => updateCast(i, "persona", e.target.value)}
+                  />
+                </Field>
+              )}
               <Field label={tr("scenarios.privateBackground")}>
                 <textarea
                   rows={2}

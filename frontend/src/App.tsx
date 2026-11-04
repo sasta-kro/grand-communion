@@ -48,6 +48,7 @@ export function App() {
     const fn = () => {
       setRoute(location.hash.slice(1) || "/sessions");
       setError("");
+      refresh();
     };
     window.addEventListener("hashchange", fn);
     return () => window.removeEventListener("hashchange", fn);

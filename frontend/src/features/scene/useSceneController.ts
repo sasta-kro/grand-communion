@@ -43,6 +43,9 @@ export function useSceneController({
     [reply, setReply] = useState<BoardMessage | null>(null);
   const [castOpen, setCastOpen] = useState(false),
     [sceneConfig, setSceneConfig] = useState<Data | null>(null);
+  const [forkPoint, setForkPoint] = useState<number | null | undefined>(
+    undefined,
+  );
   const [edit, setEdit] = useState<Data | null>(null),
     [recapOpen, setRecapOpen] = useState(false),
     [saveOpen, setSaveOpen] = useState(false),
@@ -286,6 +289,8 @@ export function useSceneController({
 
   return {
     recapError,
+    forkPoint,
+    setForkPoint,
     setRecapError,
     transcriptReady,
     following,

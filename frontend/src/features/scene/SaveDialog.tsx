@@ -1,4 +1,7 @@
-import { Download, Save, Upload } from "lucide-react";
+import { Download, Save, Trash2, Upload } from "lucide-react";
+import { useState } from "react";
+import { ManageItemDialog } from "../../components/ItemManagement";
+import { Data } from "../../lib/types";
 import { Button, Modal } from "../../components/ui";
 import { tr } from "../../i18n";
 import { api } from "../../lib/api";
@@ -7,6 +10,7 @@ import { go } from "../../lib/navigation";
 import { SceneModel } from "./useSceneController";
 
 export function SaveDialog({ model }: { model: SceneModel }) {
+  const [deleting, setDeleting] = useState<Data | null>(null);
   const {
     id,
     refresh,
@@ -22,7 +26,15 @@ export function SaveDialog({ model }: { model: SceneModel }) {
 
   return (
     <>
-      {saveOpen && (
+      {deleting && (
+        <ManageItemDialog
+          kind="saves"
+          item={{ id: deleting.id, name: deleting.name }}
+          changed={async () => setSaves(await api(`/sessions/${id}/saves`))}
+          onClose={() => setDeleting(null)}
+        />
+      )}
+      {saveOpen && !deleting && (
         <Modal
           title={tr("saves.sessionSaves")}
           subtitle={tr(
@@ -84,6 +96,13 @@ export function SaveDialog({ model }: { model: SceneModel }) {
                 }}
               >
                 {tr("saves.load")}
+              </Button>
+              <Button
+                title={tr("lifecycle.deleteItem", { name: s.name })}
+                aria-label={tr("lifecycle.deleteItem", { name: s.name })}
+                onClick={() => setDeleting(s)}
+              >
+                <Trash2 size={16} />
               </Button>
             </div>
           ))}

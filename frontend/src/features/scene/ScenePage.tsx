@@ -12,6 +12,7 @@ import { RecapDialog } from "./RecapDialog";
 import { SaveDialog } from "./SaveDialog";
 import { SceneHeader } from "./SceneHeader";
 import { SceneSettingsDialog } from "./SceneSettingsDialog";
+import { ForkDialog } from "./ForkDialog";
 import { SceneModel, useSceneController } from "./useSceneController";
 
 export function Scene(props: ScenePageProps) {
@@ -51,6 +52,7 @@ export function Scene(props: ScenePageProps) {
       <CharacterDialog model={model} />
       <RecapDialog model={model} />
       <SaveDialog model={model} />
+      {model.forkPoint !== undefined && <ForkDialog model={model} />}
     </div>
   );
 }

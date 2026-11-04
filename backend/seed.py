@@ -1,9 +1,11 @@
-from .models import Settings, Provider
+from .models import Provider, Settings
 
 
 def seed(store):
     if store.setting("settings") is None:
         store.set_setting("settings", Settings().model_dump())
+    if store.setting("library_seeded", False):
+        return
     if not store.entities("providers"):
         store.put_entity("providers", Provider().model_dump())
         store.put_entity(
@@ -38,6 +40,7 @@ def seed(store):
             ),
         ]:
             store.put_entity("personas", {"id": id, "name": name, "prompt": prompt})
+    store.set_setting("library_seeded", True)
     if store.entities("scenarios"):
         return
     worlds = [

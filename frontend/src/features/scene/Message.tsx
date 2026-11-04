@@ -4,6 +4,7 @@ import { stamp } from "../../lib/format";
 import { BoardMessage, Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
 import { ReplyPreview } from "./ReplyPreview";
+import { GitFork } from "lucide-react";
 
 export function Message({ model, m }: { model: SceneModel; m: BoardMessage }) {
   const {
@@ -64,6 +65,14 @@ export function Message({ model, m }: { model: SceneModel; m: BoardMessage }) {
             <button className="reply-link" onClick={() => setReply(m)}>
               {tr("chat.reply")}
             </button>
+            <button
+              className="message-fork icon"
+              title={tr("lifecycle.forkFromMessage", { id: m.id })}
+              aria-label={tr("lifecycle.forkFromMessage", { id: m.id })}
+              onClick={() => model.setForkPoint(m.id)}
+            >
+              <GitFork size={14} />
+            </button>
           </div>
           {m.reply_to && (
             <ReplyPreview
@@ -86,7 +95,8 @@ export function Message({ model, m }: { model: SceneModel; m: BoardMessage }) {
           )}
           <p>{m.text}</p>
           {scene.settings.show_reasoning_in_chat &&
-            !m.request_id.startsWith("operator-") && (
+            !m.request_id.startsWith("operator-") &&
+            !m.request_id.startsWith("restore-") && (
               <button
                 className="text-button quiet"
                 onClick={() => {

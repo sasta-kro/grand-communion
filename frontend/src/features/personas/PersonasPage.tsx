@@ -5,9 +5,16 @@ import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { color, initials } from "../../lib/format";
 import { Data, PageProps } from "../../lib/types";
+import {
+  ArchiveFilter,
+  ItemManagement,
+  useArchiveList,
+} from "../../components/ItemManagement";
 
 export function Personas({ boot, refresh, fail, notify }: PageProps) {
   const [edit, setEdit] = useState<Data | null>(null);
+  const { archived, setArchived, items, loading, error, retry } =
+    useArchiveList("personas", boot.personas, fail);
   return (
     <div className="page">
       <PageHeading
@@ -26,8 +33,16 @@ export function Personas({ boot, refresh, fail, notify }: PageProps) {
           </Button>
         }
       />
+      <ArchiveFilter archived={archived} setArchived={setArchived} />
+      {loading && <p role="status">{tr("lifecycle.loadingArchive")}</p>}
+      {error && <Button onClick={retry}>{tr("common.retry")}</Button>}
+      {!loading && !error && !items.length && (
+        <p className="empty-state">
+          {tr(archived ? "lifecycle.archiveEmpty" : "lifecycle.libraryEmpty")}
+        </p>
+      )}
       <div className="entity-grid">
-        {boot.personas.map((p: Data) => (
+        {items.map((p: Data) => (
           <article className="entity-card" key={p.id}>
             <div className={"avatar " + color(p.name)}>{initials(p.name)}</div>
             <h2>{p.name}</h2>
@@ -36,6 +51,12 @@ export function Personas({ boot, refresh, fail, notify }: PageProps) {
               {tr("personas.editPersona")}
               <ArrowUpRight size={15} />
             </Button>
+            <ItemManagement
+              kind="personas"
+              item={{ id: p.id, name: p.name }}
+              archived={archived}
+              changed={refresh}
+            />
           </article>
         ))}
       </div>

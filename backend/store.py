@@ -54,8 +54,17 @@ class Store:
             cutoff INTEGER, scope TEXT, body TEXT, created REAL);
         CREATE TABLE IF NOT EXISTS snapshots(id TEXT PRIMARY KEY, session_id TEXT, name TEXT,
             body TEXT, created REAL);
+        CREATE TABLE IF NOT EXISTS item_state(kind TEXT, id TEXT, archived INTEGER DEFAULT 0,
+            metadata TEXT DEFAULT '{}', PRIMARY KEY(kind,id));
+        CREATE TABLE IF NOT EXISTS state_history(id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT, cutoff INTEGER, body TEXT, created REAL);
+        CREATE INDEX IF NOT EXISTS state_history_session ON state_history(session_id,id);
         """)
+        columns = {row["name"] for row in self.query("PRAGMA table_info(messages)")}
+        if "state_id" not in columns:
+            self.db.execute("ALTER TABLE messages ADD COLUMN state_id INTEGER")
         self.db.commit()
+        self._restoring = False
 
     def query(self, sql, args=()):
         return [dict(r) for r in self.db.execute(sql, args).fetchall()]
@@ -94,6 +103,50 @@ class Store:
         )
         return value
 
+    def archived(self, kind, id):
+        row = self.one(
+            "SELECT archived FROM item_state WHERE kind=? AND id=?", (kind, id)
+        )
+        return bool(row and row["archived"])
+
+    def library(self, kind, archived=False):
+        return [
+            item
+            for item in self.entities(kind)
+            if self.archived(kind, item["id"]) == archived
+        ]
+
+    def set_archived(self, kind, id, archived):
+        self.execute(
+            "INSERT INTO item_state(kind,id,archived) VALUES(?,?,?) "
+            "ON CONFLICT(kind,id) DO UPDATE SET archived=excluded.archived",
+            (kind, id, int(archived)),
+        )
+
+    def state_body(self, id):
+        from .models import GLOBAL_AI_FIELDS, Settings
+
+        session = self.session(id)
+        values = Settings.model_validate(
+            {**self.setting("settings", {}), **session["config"]}
+        ).model_dump()
+        session["config"] = {
+            k: v for k, v in values.items() if k not in GLOBAL_AI_FIELDS
+        }
+        characters = self.characters(id)
+        for char in characters:
+            char["memory"] = self.memory(char)
+        return {"session": session, "characters": characters}
+
+    def record_state(self, id):
+        if self._restoring or not self.session(id):
+            return None
+        cursor = self.execute(
+            "INSERT INTO state_history(session_id,cutoff,body,created) VALUES(?,?,?,?)",
+            (id, self.cutoff(id), encode(self.state_body(id)), now()),
+        )
+        return cursor.lastrowid
+
     def _event(self, session_id, kind, body):
         self.db.execute(
             "INSERT INTO events(session_id,kind,body,at) VALUES(?,?,?,?)",
@@ -101,10 +154,14 @@ class Store:
         )
 
     def event(self, session_id, kind, body):
+        if not self.session(session_id):
+            return
         with self.db:
             self._event(session_id, kind, body)
 
     def log(self, session_id, level, message, character_id="", request_id=""):
+        if not self.session(session_id):
+            return
         with self.db:
             self.db.execute(
                 "INSERT INTO logs(session_id,level,message,character_id,request_id,at) VALUES(?,?,?,?,?,?)",
@@ -139,9 +196,17 @@ class Store:
             )
             for member in scenario["cast"]:
                 body = dict(member)
-                body["persona"] = next(
-                    (p["prompt"] for p in personas if p["id"] == member["persona_id"]),
-                    "",
+                body["persona"] = (
+                    member.get("persona")
+                    if member.get("persona") is not None
+                    else next(
+                        (
+                            p["prompt"]
+                            for p in personas
+                            if p["id"] == member["persona_id"]
+                        ),
+                        "",
+                    )
                 )
                 self.db.execute(
                     "INSERT INTO characters(id,session_id,body) VALUES(?,?,?)",
@@ -210,8 +275,8 @@ class Store:
                 return None
             cursor = self.db.execute(
                 """INSERT OR IGNORE INTO messages
-                (session_id,author_id,name,text,at,addressees,reply_to,request_id,part,parts,controller)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                (session_id,author_id,name,text,at,addressees,reply_to,request_id,part,parts,controller,state_id)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     session_id,
                     message.get("author_id"),
@@ -224,6 +289,10 @@ class Store:
                     message.get("part", 0),
                     message.get("parts", 1),
                     message.get("controller", "model"),
+                    self.one(
+                        "SELECT MAX(id) AS id FROM state_history WHERE session_id=?",
+                        (session_id,),
+                    )["id"],
                 ),
             )
             if not cursor.rowcount:
@@ -255,6 +324,8 @@ class Store:
             self.write_memory(char, text, char["memory_cutoff"])
 
     def write_memory(self, char, text, cutoff):
+        if not self.character(char["id"]):
+            return
         revision = uid()
         folder = self.root / "sessions" / char["session_id"] / "characters" / char["id"]
         (folder / "checkpoints").mkdir(parents=True, exist_ok=True)
@@ -275,6 +346,7 @@ class Store:
         self.event(
             char["session_id"], "memory", {"character_id": char["id"], "cutoff": cutoff}
         )
+        self.record_state(char["session_id"])
 
     def begin_request(self, id, session, char, kind, cutoff, metrics):
         self.execute(
@@ -341,13 +413,19 @@ class Store:
         return rows
 
     def snapshot(self, id, name):
-        from .models import Settings, GLOBAL_AI_FIELDS
+        from .models import GLOBAL_AI_FIELDS, Settings
 
         body = {
             "version": 1,
             "session": self.session(id),
             "characters": self.characters(id),
             "messages": self.messages(id),
+            "history": [
+                {"id": row["id"], "cutoff": row["cutoff"], **json.loads(row["body"])}
+                for row in self.query(
+                    "SELECT * FROM state_history WHERE session_id=? ORDER BY id", (id,)
+                )
+            ],
         }
         body["session"]["config"] = Settings.model_validate(
             {**self.setting("settings", {}), **body["session"]["config"]}
@@ -372,7 +450,16 @@ class Store:
         return snapshot_id
 
     def restore(self, body):
-        from .models import SavedWorld, Settings, GLOBAL_AI_FIELDS
+        self._restoring = True
+        try:
+            id = self._restore(body)
+        finally:
+            self._restoring = False
+        self.record_state(id)
+        return id
+
+    def _restore(self, body):
+        from .models import GLOBAL_AI_FIELDS, SavedWorld, Settings
 
         body = SavedWorld.model_validate(body).model_dump()
         body["session"]["config"] = Settings.model_validate(
@@ -400,10 +487,13 @@ class Store:
             source["config"],
             [],
         )
-        char_map = {}
+        char_map = {
+            char["id"]: uid()
+            for state in [*body["history"], {"characters": body["characters"]}]
+            for char in state["characters"]
+        }
         for char in body["characters"]:
-            new_id = uid()
-            char_map[char["id"]] = new_id
+            new_id = char_map[char["id"]]
             config = {
                 k: v
                 for k, v in char.items()
@@ -433,6 +523,10 @@ class Store:
                     "author_id": char_map.get(message.get("author_id")),
                     "request_id": "restore-" + uid(),
                     "reply_to": message_map.get(message.get("reply_to")),
+                    "addressees": [
+                        char_map.get(a, a)
+                        for a in message.get("addressees", ["everyone"])
+                    ],
                 },
             )
             message_map[message["id"]] = new_id
@@ -461,5 +555,37 @@ class Store:
                 self.ensure_memory(new)
             self.execute(
                 "UPDATE characters SET observed=? WHERE id=?", (observed, new["id"])
+            )
+        self.execute(
+            "UPDATE sessions SET scenario=? WHERE id=?", (encode(scenario), id)
+        )
+
+        def mapped_cutoff(old):
+            return max(
+                (new for source, new in message_map.items() if source <= old), default=0
+            )
+
+        state_map = {}
+        for state in body["history"]:
+            for char in state["characters"]:
+                char["id"] = char_map[char["id"]]
+                char["session_id"] = id
+                char["memory_cutoff"] = mapped_cutoff(char["memory_cutoff"])
+                char["observed"] = mapped_cutoff(char["observed"])
+            state_map[state["id"]] = self.execute(
+                "INSERT INTO state_history(session_id,cutoff,body,created) VALUES(?,?,?,?)",
+                (
+                    id,
+                    mapped_cutoff(state["cutoff"]),
+                    encode(
+                        {"session": state["session"], "characters": state["characters"]}
+                    ),
+                    now(),
+                ),
+            ).lastrowid
+        for message in body["messages"]:
+            self.execute(
+                "UPDATE messages SET state_id=? WHERE id=?",
+                (state_map.get(message["state_id"]), message_map[message["id"]]),
             )
         return id

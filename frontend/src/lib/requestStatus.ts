@@ -40,6 +40,8 @@ export function requestStatusDescription(record: RequestRecord): string {
   if (record.status === "interrupted") return tr("help.status.interrupted");
   const reasons: Record<string, MessageKey> = {
     session_paused: "request.cancelReason.sessionPaused",
+    session_archived: "request.cancelReason.sessionArchived",
+    session_deleted: "request.cancelReason.sessionDeleted",
     server_shutdown: "request.cancelReason.serverShutdown",
     settings_changed: "request.cancelReason.settingsChanged",
     cast_changed: "request.cancelReason.castChanged",

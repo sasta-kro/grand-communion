@@ -92,6 +92,7 @@ export function Composer({ model }: { model: SceneModel }) {
         )}
         <div className="compose-input">
           <textarea
+            disabled={scene.archived}
             aria-label={tr("chat.yourContribution")}
             placeholder={tr("chat.typeAMessage")}
             value={text}
@@ -106,7 +107,7 @@ export function Composer({ model }: { model: SceneModel }) {
           <button
             className="send"
             aria-label={tr("chat.sendContribution")}
-            disabled={sending || !text.trim()}
+            disabled={scene.archived || sending || !text.trim()}
             onClick={send}
           >
             <Icon name="send" size={21} />

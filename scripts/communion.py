@@ -15,11 +15,34 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     for name in ("status", "sessions"):
         commands.add_parser(name)
-    create = commands.add_parser("create", help="Create a paused world from a scenario ID")
+    create = commands.add_parser(
+        "create", help="Create a paused world from a scenario ID"
+    )
     create.add_argument("scenario_id")
     create.add_argument("--name", default="")
     for name in ("start", "pause", "recap"):
         commands.add_parser(name).add_argument("session_id")
+    for name in ("archive", "unarchive", "delete"):
+        action = commands.add_parser(name)
+        action.add_argument(
+            "kind",
+            choices=["sessions", "scenarios", "personas", "saves"]
+            if name == "delete"
+            else ["sessions", "scenarios", "personas"],
+        )
+        action.add_argument("id")
+        if name == "delete":
+            action.add_argument(
+                "--yes", action="store_true", help="Confirm permanent deletion"
+            )
+    fork = commands.add_parser("fork")
+    fork.add_argument("session_id")
+    fork.add_argument(
+        "--at",
+        type=int,
+        help="Include history through this message ID, or 0 for the opening",
+    )
+    fork.add_argument("--name", default="")
     say = commands.add_parser("say", help="Contribute through an in-world identity")
     say.add_argument("session_id")
     say.add_argument("text")
@@ -27,7 +50,7 @@ def main():
     identity.add_argument("--name", default="Anonymous voice")
     identity.add_argument("--character", help="Speak as an existing character ID")
     api = commands.add_parser("api", help="Call any local JSON API route")
-    api.add_argument("method", choices=["GET", "POST", "PUT"])
+    api.add_argument("method", choices=["GET", "POST", "PUT", "DELETE"])
     api.add_argument("path", help="For example /bootstrap or /sessions/ID/logs")
     body = api.add_mutually_exclusive_group()
     body.add_argument("--json", help="JSON request body")
@@ -38,7 +61,10 @@ def main():
     if (
         base.scheme != "http"
         or base.hostname not in ("localhost", "127.0.0.1", "::1")
-        or base.username or base.password or base.query or base.fragment
+        or base.username
+        or base.password
+        or base.query
+        or base.fragment
         or base.path not in ("", "/")
     ):
         parser.error("Use a local HTTP origin, such as http://127.0.0.1:8010")
@@ -53,6 +79,19 @@ def main():
     elif args.command in ("start", "pause", "recap"):
         suffix = "recaps" if args.command == "recap" else args.command
         method, path, body = "POST", f"/sessions/{args.session_id}/{suffix}", {}
+    elif args.command in ("archive", "unarchive", "delete"):
+        if args.command == "delete":
+            if not args.yes:
+                parser.error(
+                    "Permanent deletion requires --yes. Archive the item to keep it recoverable."
+                )
+            method, path = "DELETE", f"/{args.kind}/{args.id}"
+        else:
+            method, path = "POST", f"/{args.kind}/{args.id}/archive"
+            body = {"archived": args.command == "archive"}
+    elif args.command == "fork":
+        method, path = "POST", f"/sessions/{args.session_id}/fork"
+        body = {"message_id": args.at, "name": args.name}
     elif args.command == "say":
         method, path = "POST", f"/sessions/{args.session_id}/messages"
         body = {"text": args.text, "name": args.name}

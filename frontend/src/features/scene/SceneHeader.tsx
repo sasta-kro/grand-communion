@@ -1,9 +1,11 @@
-import { ArrowLeft, Pause, Play } from "lucide-react";
+import { ArrowLeft, GitFork, Pause, Play } from "lucide-react";
+import { ItemManagement } from "../../components/ItemManagement";
 import { Icon } from "../../components/Icon";
 import { Badge, Button } from "../../components/ui";
 import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { fmt } from "../../lib/format";
+import { forkWarningText } from "../../lib/lifecycle";
 import { SceneModel } from "./useSceneController";
 
 export function SceneHeader({ model }: { model: SceneModel }) {
@@ -38,8 +40,33 @@ export function SceneHeader({ model }: { model: SceneModel }) {
               })}
             </span>
           </div>
+          {scene.archived && (
+            <p className="quiet">{tr("lifecycle.archivedSessionHint")}</p>
+          )}
+          {scene.metadata?.warnings?.map((warning: string) => (
+            <p className="fork-warning" key={warning}>
+              {forkWarningText(warning)}
+            </p>
+          ))}
         </div>
         <div className="scene-actions">
+          <Button onClick={() => model.setForkPoint(null)}>
+            <GitFork size={16} />
+            <span>{tr("lifecycle.fork")}</span>
+          </Button>
+          <ItemManagement
+            kind="sessions"
+            item={scene}
+            archived={scene.archived}
+            labeled
+            changed={async (removed) => {
+              if (!removed) await model.load();
+              await model.refresh();
+            }}
+            deleted={() => {
+              location.hash = "/sessions";
+            }}
+          />
           <Button
             title={tr("scene.sceneSettings")}
             onClick={() => setSceneConfig({ ...scene.settings })}
@@ -73,6 +100,7 @@ export function SceneHeader({ model }: { model: SceneModel }) {
           </Button>
           <Button
             primary
+            disabled={scene.archived}
             onClick={() =>
               action(scene.status === "running" ? "pause" : "start")
             }

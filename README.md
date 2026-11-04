@@ -121,6 +121,10 @@ Restart recovery is paused by default. Enable automatic resume in Settings if de
 
 For a complete filesystem backup, stop Communion before copying `data/`. Alternatively, use the UI's consistent session exports. Saved provider metadata can recreate missing profiles, but existing local profiles and credentials are not overwritten. A saved world freezes its effective settings; use the Scene settings button to adjust them or return to global defaults.
 
+## Archives and forks
+
+Sessions, Scenarios, and Personas have Active and Archived views, with archive, restore, and permanent deletion under Manage. Deleting a session keeps its starting scenario and reusable personas. A message's fork control creates an independent paused session through that point, with historical cast and memory when available. Older messages may require a clearly labeled fallback. See [archives, deletion, and forks](docs/lifecycle.md) for details and CLI commands.
+
 ## Diagnostics
 
 The transcript virtualizes long conversations so only visible message rows are rendered. Messages have distinct bubbles and clickable reply excerpts, including replies to speech outside the loaded history. Opening a chat positions it immediately at the end. New speech moves into view smoothly, with reduced-motion preferences respected. Enable **Settings > Interface > Hold my position when reading older messages** to pause automatic following while reading history. This browser preference is off by default.

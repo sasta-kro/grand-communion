@@ -1,7 +1,7 @@
 from typing import Literal
-from pydantic import BaseModel, Field, field_validator
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from pydantic import BaseModel, Field, field_validator
 
 CHARACTER_PROMPT = """I am {name}, a person in this world. I experience events from my own perspective.
 I hear the public conversation by default. I speak only my own brief words, never another person's lines.
@@ -112,6 +112,7 @@ class Persona(BaseModel):
 class CastMember(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     persona_id: str = ""
+    persona: str | None = None
     role: str = ""
     background: str = ""
     provider_id: str = "glm"
@@ -165,6 +166,20 @@ class SnapshotInput(BaseModel):
     name: str = Field("Checkpoint", max_length=120)
 
 
+class ArchiveInput(BaseModel):
+    archived: bool = True
+
+
+class RenameInput(BaseModel):
+    name: str = Field(min_length=1, max_length=150)
+
+
+class ForkInput(BaseModel):
+    message_id: int | None = Field(None, ge=0)
+    name: str = Field("", max_length=150)
+    expected_warnings: list[str] | None = None
+
+
 class SavedCharacter(CastMember):
     id: str
     session_id: str = ""
@@ -189,6 +204,7 @@ class SavedMessage(BaseModel):
     part: int = Field(0, ge=0, le=20)
     parts: int = Field(1, ge=1, le=20)
     controller: Literal["operator", "model"] = "model"
+    state_id: int | None = None
 
 
 class SavedSession(BaseModel):
@@ -197,9 +213,17 @@ class SavedSession(BaseModel):
     config: dict = Field(default_factory=dict)
 
 
+class HistoricalState(BaseModel):
+    id: int
+    cutoff: int = Field(ge=0)
+    session: SavedSession
+    characters: list[SavedCharacter] = Field(max_length=32)
+
+
 class SavedWorld(BaseModel):
     version: Literal[1]
     session: SavedSession
     characters: list[SavedCharacter] = Field(max_length=32)
     messages: list[SavedMessage] = Field(max_length=100000)
     providers: list[Provider] = Field(default_factory=list, max_length=64)
+    history: list[HistoricalState] = Field(default_factory=list, max_length=10000)

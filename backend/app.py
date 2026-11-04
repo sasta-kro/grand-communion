@@ -1,32 +1,34 @@
 import asyncio
-from contextlib import asynccontextmanager
 import fcntl
 import json
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
-import time
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
+
+from .engine import Engine
+from .lifecycle import lifecycle_router
 from .models import (
-    Settings,
-    Provider,
+    GLOBAL_AI_FIELDS,
+    CastMember,
+    Injection,
     Persona,
+    Provider,
+    RecapInput,
     Scenario,
     SessionCreate,
-    Injection,
-    RecapInput,
+    Settings,
     SnapshotInput,
-    CastMember,
-    GLOBAL_AI_FIELDS,
 )
-from .store import Store, encode, uid, now
 from .provider import Credentials
-from .engine import Engine, public_message
 from .seed import seed
+from .store import Store, encode, now, uid
 from .writing_policy import WritingPolicy
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -133,19 +135,20 @@ def create_app(data_dir=None):
             for p in values
         ]
 
-    def sessions():
+    def sessions(archived=False):
         store, _ = state()
         rows = store.query(
             "SELECT id,name,status,created,updated FROM sessions ORDER BY updated DESC"
         )
         for row in rows:
+            row["archived"] = store.archived("sessions", row["id"])
             row["message_count"] = store.one(
                 "SELECT COUNT(*) AS n FROM messages WHERE session_id=?", (row["id"],)
             )["n"]
             row["character_count"] = store.one(
                 "SELECT COUNT(*) AS n FROM characters WHERE session_id=?", (row["id"],)
             )["n"]
-        return rows
+        return [row for row in rows if row["archived"] == archived]
 
     @app.get("/api/health")
     async def health():
@@ -162,14 +165,16 @@ def create_app(data_dir=None):
         return {
             "settings": engine.settings().model_dump(),
             "providers": profiles(),
-            "personas": store.entities("personas"),
-            "scenarios": store.entities("scenarios"),
+            "personas": store.library("personas"),
+            "scenarios": store.library("scenarios"),
             "sessions": sessions(),
         }
 
     @app.put("/api/settings")
     async def save_settings(value: Settings):
         app.state.store.set_setting("settings", value.model_dump())
+        for row in app.state.store.query("SELECT id FROM sessions"):
+            app.state.store.record_state(row["id"])
         return value
 
     @app.put("/api/providers/{id}")
@@ -191,8 +196,8 @@ def create_app(data_dir=None):
         return app.state.store.put_entity("scenarios", {**value.model_dump(), "id": id})
 
     @app.get("/api/sessions")
-    async def list_sessions():
-        return sessions()
+    async def list_sessions(archived: bool = False):
+        return sessions(archived)
 
     @app.post("/api/sessions")
     async def create_session(value: SessionCreate):
@@ -200,6 +205,10 @@ def create_app(data_dir=None):
         scenario = store.entity("scenarios", value.scenario_id)
         if not scenario:
             raise HTTPException(404, "Scenario not found")
+        if store.archived("scenarios", value.scenario_id):
+            raise HTTPException(
+                409, "Restore this scenario before creating a new session"
+            )
         Settings.model_validate({**engine.settings().model_dump(), **value.config})
         id = store.create_session(
             scenario, value.name, value.config, store.entities("personas")
@@ -232,6 +241,16 @@ def create_app(data_dir=None):
         latest.reverse()
         return {
             **session,
+            "archived": store.archived("sessions", id),
+            "metadata": json.loads(
+                (
+                    store.one(
+                        "SELECT metadata FROM item_state WHERE kind='sessions' AND id=?",
+                        (id,),
+                    )
+                    or {"metadata": "{}"}
+                )["metadata"]
+            ),
             "characters": chars,
             "messages": transcript_messages(store, id, latest),
             "cutoff": store.cutoff(id),
@@ -293,6 +312,7 @@ def create_app(data_dir=None):
         app.state.store.execute(
             "UPDATE sessions SET config=? WHERE id=?", (encode(overrides), id)
         )
+        app.state.store.record_state(id)
         if running:
             await app.state.engine.start(id)
         effective = app.state.engine.settings({**session, "config": overrides})
@@ -307,13 +327,18 @@ def create_app(data_dir=None):
             raise HTTPException(404, "Character not found")
         value = await request.json()
         config = CastMember.model_validate(value).model_dump()
-        config["persona"] = str(value.get("persona", char.get("persona", "")))
+        config["persona"] = str(
+            value.get("persona")
+            if value.get("persona") is not None
+            else char.get("persona", "")
+        )
         running = session["status"] == "running"
         if running:
             await engine.pause(id, "cast_changed")
         store.execute(
             "UPDATE characters SET body=? WHERE id=?", (encode(config), char_id)
         )
+        store.record_state(id)
         if running:
             await engine.start(id)
         return {"ok": True}
@@ -333,7 +358,13 @@ def create_app(data_dir=None):
             await engine.pause(id, "cast_changed")
         body = value.model_dump()
         persona = store.entity("personas", value.persona_id)
-        body["persona"] = str(raw.get("persona", persona["prompt"] if persona else ""))
+        body["persona"] = str(
+            raw.get("persona")
+            if raw.get("persona") is not None
+            else persona["prompt"]
+            if persona
+            else ""
+        )
         char_id = uid()
         cutoff = store.cutoff(id)
         store.execute(
@@ -506,7 +537,7 @@ def create_app(data_dir=None):
                 for p in body.get("providers", [])
             ]
             return {"id": app.state.store.restore(body)}
-        except (KeyError, ValueError, TypeError) as error:
+        except (KeyError, ValueError, TypeError):
             raise HTTPException(400, "Invalid or unsupported save file") from None
 
     @app.get("/api/sessions/{id}/events")
@@ -516,6 +547,9 @@ def create_app(data_dir=None):
         async def stream():
             cursor = int(request.headers.get("last-event-id") or after)
             while not await request.is_disconnected():
+                if not app.state.store.session(id):
+                    yield 'event: update\ndata: {"kind":"deleted","body":{}}\n\n'
+                    return
                 rows = app.state.store.query(
                     "SELECT * FROM events WHERE session_id=? AND id>? ORDER BY id LIMIT 200",
                     (id, cursor),
@@ -533,6 +567,8 @@ def create_app(data_dir=None):
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
+
+    app.include_router(lifecycle_router(app))
 
     frontend = ROOT / "frontend" / "dist"
     if frontend.exists():

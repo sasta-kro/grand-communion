@@ -2,6 +2,7 @@
 export type Data = Record<string, any>;
 
 export interface Persona {
+  archived?: boolean;
   id: string;
   name: string;
   prompt: string;
@@ -13,6 +14,7 @@ export interface Provider extends Data {
   configured: boolean;
 }
 export interface CastMember {
+  persona?: string | null;
   name: string;
   persona_id: string;
   role: string;
@@ -39,6 +41,7 @@ export interface Scenario {
   cast: CastMember[];
 }
 export interface SessionSummary {
+  archived?: boolean;
   id: string;
   name: string;
   status: string;
@@ -100,6 +103,8 @@ export interface RecapRecord {
   };
 }
 export interface SceneData {
+  archived?: boolean;
+  metadata?: { forked_from?: string; forked_at?: number; warnings?: string[] };
   id: string;
   name: string;
   status: string;

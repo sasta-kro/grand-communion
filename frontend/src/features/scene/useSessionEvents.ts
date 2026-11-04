@@ -40,6 +40,10 @@ export function useSessionEvents({
     let extraTimer: ReturnType<typeof setTimeout>;
     const onUpdate = (event: MessageEvent<string>) => {
       const e = JSON.parse(event.data);
+      if (e.kind === "deleted") {
+        location.hash = "/sessions";
+        return;
+      }
       if (["message", "session", "memory"].includes(e.kind)) {
         if (
           e.kind === "message" &&

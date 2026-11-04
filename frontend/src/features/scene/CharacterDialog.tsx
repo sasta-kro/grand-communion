@@ -3,9 +3,61 @@ import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
+import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 
 export function CharacterDialog({ model }: { model: SceneModel }) {
   const { id, boot, fail, notify, scene, edit, setEdit, load } = model;
+  const [removing, setRemoving] = useState(false);
+  const [removeError, setRemoveError] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    setRemoving(false);
+    setRemoveError("");
+  }, [edit?.id]);
+
+  if (removing && edit)
+    return (
+      <Modal
+        title={tr("lifecycle.removeCharacter", { name: edit.name })}
+        onClose={() => {
+          if (!busy) setRemoving(false);
+        }}
+      >
+        <p>{tr("lifecycle.removeCharacterDescription")}</p>
+        {removeError && (
+          <p className="alert" role="alert">
+            {removeError}
+          </p>
+        )}
+        <div className="actions">
+          <Button disabled={busy} onClick={() => setRemoving(false)}>
+            {tr("common.cancel")}
+          </Button>
+          <Button
+            disabled={busy}
+            className="danger"
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await api(`/sessions/${id}/characters/${edit.id}`, "DELETE");
+                setEdit(null);
+                setRemoving(false);
+                await load();
+                await model.refresh();
+              } catch (error) {
+                setRemoveError(String(error));
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <Trash2 size={16} />
+            {tr("lifecycle.remove")}
+          </Button>
+        </div>
+      </Modal>
+    );
 
   return (
     <>
@@ -120,6 +172,12 @@ export function CharacterDialog({ model }: { model: SceneModel }) {
             </small>
           </div>
           <div className="actions">
+            {edit.id !== "new" && (
+              <Button className="danger" onClick={() => setRemoving(true)}>
+                <Trash2 size={15} />
+                {tr("lifecycle.remove")}
+              </Button>
+            )}
             <Button
               disabled={scene.status === "running" || edit.id === "new"}
               title={tr("characters.pauseBeforeManuallyCompacting")}
