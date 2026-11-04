@@ -1,18 +1,14 @@
 import asyncio
 import hashlib
 import json
-import math
 import re
 import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from .models import Settings, Provider, Speech, NoResponse
+from .models import Settings, Provider, Speech, NoResponse, GLOBAL_AI_FIELDS
 from .provider import Gateway, ProviderError, parse_json, cancellation_reason
 from .store import uid, now, encode
-
-
-def tokens(text):
-    return math.ceil(len(text) / 3.5)
+from .writing_policy import WritingPolicy, tokens
 
 
 def split_speech(text, limit, max_parts):
@@ -58,10 +54,14 @@ class Engine:
     def settings(self, session=None):
         values = self.store.setting("settings", {})
         if session:
-            # Speech rules stay global, including for restored or frozen worlds.
+            # AI writing policy stays global, including for restored worlds.
             values = {
                 **values,
-                **{k: v for k, v in session["config"].items() if k != "speech_rules"},
+                **{
+                    k: v
+                    for k, v in session["config"].items()
+                    if k not in GLOBAL_AI_FIELDS
+                },
             }
         return Settings.model_validate(values)
 
@@ -181,8 +181,6 @@ class Engine:
                 "My private background:\n" + char["background"],
                 "Our setting:\n" + session["scenario"]["premise"],
                 "People publicly present:\n" + encode(cast),
-                "Shared rules for my spoken words, taking precedence over conflicting "
-                "style instructions in my personality or setting:\n" + cfg.speech_rules,
             ]
         )
         memory = self.store.memory(char)
@@ -194,12 +192,15 @@ class Engine:
             [public_message(m, cfg.timezone, cfg.include_model_time) for m in messages]
         )
         user += "\n\nI now have an opportunity to speak, or to return no_response. I output only JSON."
-        return [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ]
+        return self.gateway.prepare_messages(
+            [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ]
+        )
 
     def begin(self, session, char, kind, cutoff, context, profile):
+        context[:] = self.gateway.prepare_messages(context)
         request_id = uid()
         estimate = sum(tokens(m["content"]) for m in context)
         self.store.begin_request(
@@ -215,6 +216,7 @@ class Engine:
                 "provider_id": profile.id,
                 "model": profile.model,
                 "reasoning_effort": profile.reasoning_effort,
+                "writing_policy": WritingPolicy(self.settings()).fingerprint,
             },
         )
         return request_id
@@ -243,7 +245,10 @@ class Engine:
         self.store.phase(char["id"], "compacting")
         memory = self.store.memory(char)
         chunk, count = [], 0
-        budget = max(500, min(32000, capacity - profile.max_output - 2000))
+        policy_size = tokens(WritingPolicy(self.settings()).instruction)
+        budget = max(
+            500, min(32000, capacity - profile.max_output - 2000 - policy_size)
+        )
         batches = []
         for row in older:
             size = tokens(encode(public_message(row)))
@@ -490,25 +495,28 @@ class Engine:
                             "Narrator: " + self.credentials.redact(str(error))[:400],
                         )
 
-    async def recap(self, id, after=0, scope=None):
+    async def recap(self, id, after=0, scope=None, force=False):
         lock = self.recap_locks.setdefault(id, asyncio.Lock())
         async with lock:
-            return await self._recap(id, after, scope)
+            return await self._recap(id, after, scope, force)
 
-    async def _recap(self, id, after=0, scope=None):
+    async def _recap(self, id, after=0, scope=None, force=False):
         session = self.store.session(id)
         cfg = self.settings(session)
         scope = scope or cfg.narrator_scope
         cutoff = self.store.cutoff(id)
         rows = self.store.messages(id, after, cutoff)
         profile = self.profile(cfg.narrator_provider)
-        signature = hashlib.sha256(cfg.narrator_prompt.encode()).hexdigest()[:12]
+        signature = hashlib.sha256(
+            (cfg.narrator_prompt + WritingPolicy(self.settings()).fingerprint).encode()
+        ).hexdigest()[:12]
         previous = self.store.query(
             "SELECT * FROM recaps WHERE session_id=? AND after_id=? AND cutoff=? AND scope=? ORDER BY created DESC LIMIT 1",
             (id, after, cutoff, scope),
         )
         if (
-            previous
+            not force
+            and previous
             and json.loads(previous[0]["body"]).get("prompt_revision") == signature
         ):
             return previous[0]["id"]
@@ -555,6 +563,7 @@ class Engine:
                 tokens(encode(private))
                 + tokens(session["scenario"]["premise"])
                 + tokens(cfg.narrator_prompt)
+                + tokens(WritingPolicy(self.settings()).instruction)
             )
             budget = max(
                 500,
@@ -623,6 +632,7 @@ class Engine:
             "notable": notable,
             "unresolved": [str(x) for x in report.get("unresolved", [])[:20]],
             "prompt_revision": signature,
+            "writing_policy": WritingPolicy(self.settings()).fingerprint,
             "source_count": len(rows),
             "provider_id": profile.id,
         }

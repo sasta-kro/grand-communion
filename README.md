@@ -71,7 +71,7 @@ The initial defaults are a five-second character cooldown, one-second global del
 
 Providers currently support OpenAI-compatible streaming and native Ollama streaming. GLM uses the Z.ai Coding Plan chat-completion endpoint. Reasoning effort, capture of provider-returned reasoning, and links that expose reasoning alongside chat are independent settings. A low effort level is not the same as disabling reasoning. A local Ollama model must already be available; Communion does not install models automatically. A clearly labeled Mock laboratory provider is available for inexpensive functional checks.
 
-Edit **Settings > Prompts > Global speech rules** to control all characters' spoken style in one place. The default asks for no em dashes, semicolons, or colons in speech while preserving valid JSON syntax. These instructions apply on the next generation to every character, across providers, scene overrides, and restored saves. They do not rewrite existing speech or constrain narrator reports and private memories.
+Edit **Settings > Prompts > Global AI rules** for instructions shared by every model request, including character turns, memory compaction, narrator recaps, and corrections. The adjacent punctuation controls prohibit em dashes, semicolons, and colons in generated prose by default. Returned prose is validated before use. A violating response gets one correction attempt, then an explicit error if it still fails. Required JSON syntax and protocol identifiers remain valid. These settings cannot be overridden by a scene or loaded save. Existing history is retained, and reports generated under earlier rules are marked.
 
 ## Scripts and agent access
 
@@ -102,7 +102,7 @@ data/sessions/<session>/characters/<character>/
 
 Compaction defaults to 60% of the configured context. The default GLM context capacity is 1,000,000 tokens. An optional working-context ceiling can lower the application budget. Context counts are estimates, with explicit output reserve; provider-reported usage is displayed separately. Failed compaction keeps the last valid checkpoint. A character pauses its own progress if no safe request can fit, while other characters can continue.
 
-The narrator runs every ten minutes by default while a session is running and has new public speech. It can also prepare reports on demand. Its prompt, provider, schedule, and access scope are editable. Public history is the default; including private memories and exposed reasoning is an explicit option. Reports never become character context, dialogue, or world facts. Notable moments are evidence-linked interpretations, not guaranteed anomaly detection. Quiet intervals do not require invented events.
+The narrator is manual by default. **Generate recap** requests a fresh report on demand, including for a paused session. Optional scheduling is off by default and can be enabled in **Settings > Narrator** or for one world in **Scene settings**. When enabled, its initial interval is ten minutes and it only reports while the session runs and has new public speech. Its prompt, provider, schedule, and access scope are editable. Public history is the default; including private memories and exposed reasoning is an explicit option. Reports never become character context, dialogue, or world facts. Notable moments are evidence-linked interpretations, not guaranteed anomaly detection. Quiet intervals do not require invented events.
 
 ## Saves and recovery
 
@@ -118,7 +118,7 @@ The transcript virtualizes long conversations so only visible message rows are r
 
 The side pane includes current activity, latency history, recent outcomes, estimated per-character context pressure, individual request inspection, provider reasoning, and filtered DEBUG/INFO/WARNING/ERROR logs. Request details distinguish queue delay, first token, reasoning time, total duration, usage, retries, HTTP failures, and output finish reasons.
 
-Hover technical labels or use their question-mark controls for explanations. Help supports keyboard focus, tap, and Escape. Settings and diagnostics share definitions from translation resources. See [interface text and contextual help](docs/interface-text.md) for maintenance and adding languages.
+Hover technical labels or use their question-mark controls for explanations. Hover waits 0.6 seconds by default. Change the positive delay in **Settings > Interface**; keyboard focus, click, and tap remain immediate. Help supports keyboard focus, tap, and Escape. Settings and diagnostics share definitions from translation resources. See [interface text and contextual help](docs/interface-text.md) for maintenance and adding languages.
 
 Cancelled means Communion stopped an unfinished request, for example on pause, reconfiguration, or backend shutdown. It differs from a character's deliberate no response. New records store the cancellation cause, elapsed time, and number of already published parts. Older records cannot supply a cause that was never recorded. Missing timing or HTTP data is displayed explicitly rather than treated as success.
 

@@ -21,11 +21,13 @@ from .models import (
     RecapInput,
     SnapshotInput,
     CastMember,
+    GLOBAL_AI_FIELDS,
 )
 from .store import Store, encode, uid, now
 from .provider import Credentials
 from .engine import Engine, public_message
 from .seed import seed
+from .writing_policy import WritingPolicy
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -262,7 +264,7 @@ def create_app(data_dir=None):
         overrides = {
             k: getattr(validated, k)
             for k in values
-            if k in Settings.model_fields and k != "speech_rules"
+            if k in Settings.model_fields and k not in GLOBAL_AI_FIELDS
         }
         running = session["status"] == "running"
         if running:
@@ -397,6 +399,10 @@ def create_app(data_dir=None):
         )
         for r in rows:
             r["body"] = json.loads(r["body"])
+            r["current_policy"] = (
+                r["body"].get("writing_policy")
+                == WritingPolicy(app.state.engine.settings()).fingerprint
+            )
         return rows
 
     @app.post("/api/sessions/{id}/recaps")
@@ -408,7 +414,9 @@ def create_app(data_dir=None):
         async def work():
             result = {}
             try:
-                await app.state.engine.recap(id, value.after_id, value.scope)
+                await app.state.engine.recap(
+                    id, value.after_id, value.scope, value.force
+                )
             except Exception as error:
                 result["error"] = (
                     "Narrator: " + app.state.credentials.redact(str(error))[:400]

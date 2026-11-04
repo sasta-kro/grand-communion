@@ -23,12 +23,24 @@ Distinguish your interpretations from established facts. Identify unresolved thr
 not dialogue within the world. Return JSON with title, narrative, notable (a list of {text, message_ids}), and unresolved
 (a list of strings). Do not force a dramatic event into an ordinary passage."""
 
+LEGACY_SPEECH_RULES = (
+    "Use no em dashes, semicolons, or colons in my spoken words. "
+    "These rules apply to speech text only. Keep the required JSON syntax valid."
+)
+DEFAULT_WRITING_RULES = (
+    "Write plainly and follow the configured punctuation restrictions. "
+    "Keep the required JSON syntax valid."
+)
+GLOBAL_AI_FIELDS = frozenset({"speech_rules", "forbidden_punctuation"})
+
 
 class Settings(BaseModel):
     speech_rules: str = Field(
-        "Use no em dashes, semicolons, or colons in my spoken words. "
-        "These rules apply to speech text only. Keep the required JSON syntax valid.",
+        DEFAULT_WRITING_RULES,
         max_length=20000,
+    )
+    forbidden_punctuation: list[Literal["em_dash", "semicolon", "colon"]] = Field(
+        default_factory=lambda: ["em_dash", "semicolon", "colon"], max_length=3
     )
     auto_resume: bool = False
     max_concurrency: int = Field(8, ge=1, le=64)
@@ -43,7 +55,7 @@ class Settings(BaseModel):
     character_prompt: str = CHARACTER_PROMPT
     memory_prompt: str = MEMORY_PROMPT
     narrator_prompt: str = NARRATOR_PROMPT
-    narrator_enabled: bool = True
+    narrator_enabled: bool = False
     narrator_interval: int = Field(600, ge=30, le=86400)
     narrator_scope: Literal["public", "private"] = "public"
     narrator_provider: str = "glm"
@@ -52,6 +64,11 @@ class Settings(BaseModel):
     reasoning_limit: int = Field(128000, ge=1000, le=1_000_000)
     include_model_time: bool = True
     timezone: str = "Asia/Bangkok"
+
+    @field_validator("speech_rules", mode="before")
+    @classmethod
+    def broaden_legacy_default(cls, value):
+        return DEFAULT_WRITING_RULES if value == LEGACY_SPEECH_RULES else value
 
     @field_validator("timezone")
     @classmethod
@@ -141,6 +158,7 @@ class Injection(BaseModel):
 class RecapInput(BaseModel):
     after_id: int = Field(0, ge=0)
     scope: Literal["public", "private"] | None = None
+    force: bool = True
 
 
 class SnapshotInput(BaseModel):

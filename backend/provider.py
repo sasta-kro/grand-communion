@@ -8,6 +8,7 @@ from pathlib import Path
 import httpx
 from dotenv import dotenv_values
 from .models import Provider
+from .writing_policy import WritingPolicy, tokens
 
 
 class ProviderError(Exception):
@@ -140,11 +141,132 @@ class Gateway:
         )
         self.limiter = Limiter(settings)
 
+    def prepare_messages(self, messages):
+        return WritingPolicy(self.settings()).messages(messages)
+
     async def generate(self, profile: Provider, messages, kind, request_id):
+        policy = WritingPolicy(self.settings())
+        context = policy.messages(messages)
+        started = time.monotonic()
+        history = []
+        row = self.store.one(
+            "SELECT session_id FROM requests WHERE id=?", (request_id,)
+        )
+        cfg = (
+            self.settings(self.store.session(row["session_id"]))
+            if row
+            else self.settings()
+        )
         try:
-            return await self._generate(profile, messages, kind, request_id)
+            for revision in range(2):
+                estimate = sum(tokens(message["content"]) for message in context)
+                capacity = min(
+                    profile.context_tokens,
+                    cfg.working_context or profile.context_tokens,
+                )
+                if estimate + profile.max_output + 256 > capacity:
+                    raise ProviderError(
+                        "Request cannot fit with the global writing rules and output allowance"
+                    )
+                self.store.request_update(
+                    request_id,
+                    "queued",
+                    {
+                        "writing_policy": policy.fingerprint,
+                        "estimated_input_tokens": estimate,
+                        "policy_retries": revision,
+                    },
+                )
+                raw = await self._generate(profile, context, kind, request_id)
+                record = self.store.one(
+                    "SELECT metrics,reasoning FROM requests WHERE id=?", (request_id,)
+                )
+                if record:
+                    history.append((json.loads(record["metrics"]), record["reasoning"]))
+                try:
+                    value = parse_json(raw)
+                except ValueError:
+                    raise ProviderError("Model response was not valid JSON") from None
+                latest = WritingPolicy(self.settings())
+                changed = latest.fingerprint != policy.fingerprint
+                if changed:
+                    policy = latest
+                    context = policy.messages(context)
+                violations = policy.violations(value)
+                if not violations and not changed:
+                    if record:
+                        usage_keys = {
+                            key
+                            for metrics, _ in history
+                            for key in metrics.get("usage", {})
+                        }
+                        usage = {
+                            key: sum(metrics["usage"][key] for metrics, _ in history)
+                            if all(
+                                metrics.get("usage", {}).get(key) is not None
+                                for metrics, _ in history
+                            )
+                            else None
+                            for key in usage_keys
+                        }
+                        reasoning = "\n\n".join(text for _, text in history if text)
+                        metrics = {
+                            "duration_ms": round((time.monotonic() - started) * 1000),
+                            "usage": usage,
+                            "generation_calls": revision + 1,
+                            "policy_retries": revision,
+                            "queue_ms": sum(
+                                item.get("queue_ms", 0) for item, _ in history
+                            ),
+                            "reasoning_ms": sum(
+                                item.get("reasoning_ms", 0) for item, _ in history
+                            ),
+                            "reasoning_truncated": len(reasoning) > cfg.reasoning_limit
+                            or any(
+                                item.get("reasoning_truncated") for item, _ in history
+                            ),
+                        }
+                        for key in (
+                            "first_byte_ms",
+                            "first_token_ms",
+                            "first_content_ms",
+                        ):
+                            if key in history[0][0]:
+                                metrics[key] = history[0][0][key]
+                        self.store.request_update(
+                            request_id,
+                            "completed",
+                            metrics,
+                            reasoning[: cfg.reasoning_limit],
+                        )
+                    return raw
+                if revision:
+                    if changed:
+                        raise ProviderError(
+                            "Global writing rules changed during correction. Try again."
+                        )
+                    raise ProviderError(
+                        "Generated prose still violates the global punctuation restrictions after correction"
+                    )
+                if row:
+                    self.store.log(
+                        row["session_id"],
+                        "WARNING",
+                        "Generated prose failed global punctuation checks. Requesting one correction.",
+                        request_id=request_id,
+                    )
+                context = [
+                    *context,
+                    {"role": "assistant", "content": raw},
+                    {"role": "user", "content": policy.correction(violations)},
+                ]
         except asyncio.CancelledError as error:
             self.store.cancel_request(request_id, cancellation_reason(error))
+            raise
+        except ProviderError as error:
+            self.store.request_update(
+                request_id, "error", error=self.credentials.redact(str(error))
+            )
             raise
 
     async def _generate(self, profile: Provider, messages, kind, request_id):

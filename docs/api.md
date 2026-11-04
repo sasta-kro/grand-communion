@@ -71,13 +71,14 @@ with httpx.Client(base_url="http://127.0.0.1:8010/api") as client:
     response.raise_for_status()
     settings = response.json()["settings"]
     settings["speech_rules"] = (
-        "Use no em dashes, semicolons, or colons in my spoken words. "
+        "Write plainly and follow the configured punctuation restrictions. "
         "Keep the required JSON syntax valid."
     )
+    settings["forbidden_punctuation"] = ["em_dash", "semicolon", "colon"]
     client.put("/settings", json=settings).raise_for_status()
 ```
 
-Global speech rules apply to all character generations, including worlds with their own settings and loaded saves. They do not change existing messages or requests already in flight. They are model instructions, so adherence depends on the model rather than a punctuation-rewriting filter.
+The API retains the `speech_rules` field name for compatibility, but its scope is now every model request. It is displayed as Global AI rules. Both this field and `forbidden_punctuation` are global and cannot be frozen by a save or overridden by a scene. The shared gateway injects the rules and validates returned prose string values. One correction attempt is allowed before reporting a policy failure. Required JSON punctuation, machine identifiers, and source references are exempt. Arbitrary freeform instructions remain model instructions, while the listed punctuation restrictions receive a hard check.
 
 Request diagnostic metrics now record `http_status` as soon as provider response headers arrive. Missing status is not equivalent to HTTP 200. Cancellation metrics include `cancel_reason`, `cancelled_at`, `elapsed_ms`, and `published_parts`. Causes include `session_paused`, `settings_changed`, `cast_changed`, `server_shutdown`, and a generic `task_cancelled`. Recovery marks previously unfinished requests `interrupted` with `backend_restart`. Older records may lack these metrics; clients should show that absence explicitly.
 
@@ -86,3 +87,5 @@ Request diagnostic metrics now record `http_status` as soon as provider response
 An assistant could use this API through a small set of tools for inspecting and editing scenarios, personas, characters, and settings. It would edit validated application data through the same service as the interface. It would not need to rewrite its own runtime code. Such an assistant is not included yet.
 
 The current API assumes a trusted local operator and has no authentication. It includes private memories and diagnostic reasoning. Keep the server on localhost and scope any future assistant's tools to the operations and data it actually needs.
+
+Narration is on demand by default. `POST /sessions/{id}/recaps` queues a fresh report by default, with optional `after_id` and `scope` parameters. Pass `force: false` to allow reuse of an identical cached report. Automatic scheduling is opt-in through `narrator_enabled`. Cache signatures include the narrator prompt and global writing policy. Recap responses include `current_policy` so older reports can be identified. Request metrics include `writing_policy`, `policy_retries`, and `generation_calls`.

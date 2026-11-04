@@ -92,6 +92,7 @@ async def test_global_speech_rules_follow_settings_even_for_saved_worlds(app):
     assert "speech_rules" not in body["session"]["config"]
     # Older or external saves cannot freeze their own copy of these rules.
     body["session"]["config"]["speech_rules"] = "Use obsolete punctuation."
+    body["session"]["config"]["forbidden_punctuation"] = []
     restored = store.restore(body)
     cfg.speech_rules = "Use no colons or semicolons."
     store.set_setting("settings", cfg.model_dump())
@@ -100,8 +101,10 @@ async def test_global_speech_rules_follow_settings_even_for_saved_worlds(app):
             context = engine.context(
                 store.session(session_id), char, store.cutoff(session_id)
             )
-            assert cfg.speech_rules in context[0]["content"]
-            assert "obsolete punctuation" not in context[0]["content"]
+            assert cfg.speech_rules in "\n".join(
+                m["content"] for m in context if m["role"] == "system"
+            )
+            assert "obsolete punctuation" not in json.dumps(context)
 
 
 async def test_save_restore_and_memory_isolation(app):
@@ -536,3 +539,216 @@ async def test_cancellation_records_cause_and_http_state(app, queued):
     else:
         assert row["metrics"]["http_status"] == 200
         assert "partial thought" in row["reasoning"]
+
+
+@pytest.mark.parametrize("kind", ["character", "memory", "narrator"])
+@pytest.mark.parametrize("protocol", ["openai", "ollama"])
+async def test_global_policy_is_sent_by_every_request_path(app, kind, protocol):
+    from backend.writing_policy import POLICY_MARKER, WritingPolicy
+
+    engine, store = app.state.engine, app.state.store
+    settings = engine.settings().model_copy(
+        update={"speech_rules": "WRITING_RULE_SENTINEL"}
+    )
+    store.set_setting("settings", settings.model_dump())
+    id = make_session(app)
+    char = store.characters(id)[0]
+    profile = Provider(id="test", protocol=protocol, requires_key=False)
+    result = {
+        "action": "speak",
+        "text": "I remember the promise.",
+        "addressees": ["Name:North"],
+    }
+    seen = []
+
+    def respond(request):
+        payload = json.loads(request.content)
+        seen.append(payload)
+        content = json.dumps(result)
+        if protocol == "openai":
+            return httpx.Response(
+                200,
+                text="data: "
+                + json.dumps(
+                    {
+                        "choices": [
+                            {"delta": {"content": content}, "finish_reason": "stop"}
+                        ]
+                    }
+                )
+                + "\n\ndata: [DONE]\n\n",
+            )
+        return httpx.Response(
+            200, text=json.dumps({"message": {"content": content}, "done": True}) + "\n"
+        )
+
+    await engine.gateway.client.aclose()
+    engine.gateway.client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    context = [
+        {"role": "system", "content": "Base instructions."},
+        {"role": "user", "content": "My observations."},
+    ]
+    rid = engine.begin(store.session(id), char, kind, 0, context, profile)
+    assert (
+        parse_json(await engine.gateway.generate(profile, context, kind, rid)) == result
+    )
+    policy_messages = [
+        m for m in seen[0]["messages"] if m["content"].startswith(POLICY_MARKER)
+    ]
+    assert len(policy_messages) == 1
+    assert "WRITING_RULE_SENTINEL" in policy_messages[0]["content"]
+    assert "narration" in policy_messages[0]["content"]
+    assert "memories" in policy_messages[0]["content"]
+    assert (
+        store.requests(id)[0]["metrics"]["writing_policy"]
+        == WritingPolicy(settings).fingerprint
+    )
+
+
+@pytest.mark.parametrize("kind", ["character", "memory", "narrator"])
+async def test_prose_violations_are_corrected_before_return(app, kind):
+    from backend.writing_policy import WritingPolicy
+
+    engine, store = app.state.engine, app.state.store
+    id = make_session(app)
+    char = store.characters(id)[0]
+    profile = Provider(id="test", requires_key=False)
+    if kind == "character":
+        bad = {
+            "action": "speak",
+            "text": "I wait\u2014here; until dawn: quietly.",
+            "addressees": ["Name:North"],
+        }
+        good = {**bad, "text": "I wait here until dawn, quietly."}
+    elif kind == "memory":
+        bad, good = (
+            {"memory": "I wait\u2014here; until dawn: quietly."},
+            {"memory": "I wait here until dawn, quietly."},
+        )
+    else:
+        bad = {
+            "title": "The vigil",
+            "narrative": "I wait\u2014here; until dawn: quietly.",
+            "notable": [{"text": "A promise was made.", "message_ids": [1]}],
+            "unresolved": [],
+        }
+        good = {**bad, "narrative": "I wait here until dawn, quietly."}
+    payloads = []
+
+    def respond(request):
+        payloads.append(json.loads(request.content))
+        content = json.dumps(bad if len(payloads) == 1 else good)
+        return httpx.Response(
+            200,
+            text="data: "
+            + json.dumps(
+                {"choices": [{"delta": {"content": content}, "finish_reason": "stop"}]}
+            )
+            + "\n\ndata: "
+            + json.dumps(
+                {"choices": [], "usage": {"prompt_tokens": 50, "completion_tokens": 20}}
+            )
+            + "\n\ndata: [DONE]\n\n",
+        )
+
+    await engine.gateway.client.aclose()
+    engine.gateway.client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    context = [{"role": "user", "content": "My observations."}]
+    rid = engine.begin(store.session(id), char, kind, 0, context, profile)
+    value = parse_json(await engine.gateway.generate(profile, context, kind, rid))
+    assert value == good
+    assert not WritingPolicy(engine.settings()).violations(value)
+    assert len(payloads) == 2
+    assert "corrected JSON" in payloads[1]["messages"][-1]["content"]
+    metrics = store.requests(id)[0]["metrics"]
+    assert metrics["policy_retries"] == 1
+    assert metrics["generation_calls"] == 2
+    assert metrics["usage"]["input_tokens"] == 100
+    assert metrics["usage"]["output_tokens"] == 40
+
+
+async def test_repeated_writing_violation_is_an_error_not_accepted_prose(app):
+    engine, store = app.state.engine, app.state.store
+    id = make_session(app)
+    char = store.characters(id)[0]
+    profile = Provider(id="test", requires_key=False)
+
+    def respond(request):
+        content = json.dumps({"memory": "I remember: a promise; a debt."})
+        return httpx.Response(
+            200,
+            text="data: "
+            + json.dumps(
+                {"choices": [{"delta": {"content": content}, "finish_reason": "stop"}]}
+            )
+            + "\n\ndata: [DONE]\n\n",
+        )
+
+    await engine.gateway.client.aclose()
+    engine.gateway.client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    context = [{"role": "user", "content": "My observations."}]
+    rid = engine.begin(store.session(id), char, "memory", 0, context, profile)
+    with pytest.raises(ProviderError, match="global punctuation"):
+        await engine.gateway.generate(profile, context, "memory", rid)
+    assert store.requests(id)[0]["status"] == "error"
+    assert not store.messages(id)
+
+
+async def test_recap_cache_changes_with_global_policy_and_narrator_is_manual(app):
+    from backend.models import LEGACY_SPEECH_RULES, DEFAULT_WRITING_RULES
+
+    assert not Settings().narrator_enabled
+    assert (
+        Settings(speech_rules=LEGACY_SPEECH_RULES).speech_rules == DEFAULT_WRITING_RULES
+    )
+    id = make_session(app)
+    engine, store = app.state.engine, app.state.store
+    await engine.inject(store.session(id), Injection(text="A promise was made."))
+    first = await engine.recap(id)
+    assert await engine.recap(id) == first
+    config = engine.settings().model_copy(
+        update={"speech_rules": "Use short sentences."}
+    )
+    store.set_setting("settings", config.model_dump())
+    second = await engine.recap(id)
+    assert first != second
+    assert await engine.recap(id, force=True) != second
+
+
+async def test_rules_changed_during_generation_are_applied_before_acceptance(app):
+    from backend.writing_policy import WritingPolicy
+
+    engine, store = app.state.engine, app.state.store
+    id = make_session(app)
+    char = store.characters(id)[0]
+    profile = Provider(id="test", requires_key=False)
+    payloads = []
+    latest = engine.settings().model_copy(
+        update={"speech_rules": "LATEST_POLICY_SENTINEL"}
+    )
+
+    def respond(request):
+        payloads.append(json.loads(request.content))
+        if len(payloads) == 1:
+            store.set_setting("settings", latest.model_dump())
+        content = json.dumps({"action": "speak", "text": "I remember a promise."})
+        return httpx.Response(
+            200,
+            text="data: "
+            + json.dumps(
+                {"choices": [{"delta": {"content": content}, "finish_reason": "stop"}]}
+            )
+            + "\n\ndata: [DONE]\n\n",
+        )
+
+    await engine.gateway.client.aclose()
+    engine.gateway.client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    context = [{"role": "user", "content": "My observations."}]
+    rid = engine.begin(store.session(id), char, "character", 0, context, profile)
+    await engine.gateway.generate(profile, context, "character", rid)
+    assert len(payloads) == 2
+    assert "LATEST_POLICY_SENTINEL" in json.dumps(payloads[1]["messages"])
+    assert (
+        store.requests(id)[0]["metrics"]["writing_policy"]
+        == WritingPolicy(latest).fingerprint
+    )

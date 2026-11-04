@@ -341,7 +341,7 @@ class Store:
         return rows
 
     def snapshot(self, id, name):
-        from .models import Settings
+        from .models import Settings, GLOBAL_AI_FIELDS
 
         body = {
             "version": 1,
@@ -352,7 +352,8 @@ class Store:
         body["session"]["config"] = Settings.model_validate(
             {**self.setting("settings", {}), **body["session"]["config"]}
         ).model_dump()
-        body["session"]["config"].pop("speech_rules", None)
+        for key in GLOBAL_AI_FIELDS:
+            body["session"]["config"].pop(key, None)
         used = {c["provider_id"] for c in body["characters"]}
         used.add(
             body["session"]["config"].get(
@@ -371,13 +372,14 @@ class Store:
         return snapshot_id
 
     def restore(self, body):
-        from .models import SavedWorld, Settings
+        from .models import SavedWorld, Settings, GLOBAL_AI_FIELDS
 
         body = SavedWorld.model_validate(body).model_dump()
         body["session"]["config"] = Settings.model_validate(
             {**self.setting("settings", {}), **body["session"]["config"]}
         ).model_dump()
-        body["session"]["config"].pop("speech_rules", None)
+        for key in GLOBAL_AI_FIELDS:
+            body["session"]["config"].pop(key, None)
         if len({m["id"] for m in body["messages"]}) != len(body["messages"]):
             raise ValueError("Duplicate source message IDs in save")
         if len({c["id"] for c in body["characters"]}) != len(body["characters"]):

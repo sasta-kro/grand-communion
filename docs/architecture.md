@@ -82,3 +82,9 @@ Commit the dependency declarations, both lock files, and `.python-version`. Igno
 **`tools/` and `probe_repos/`** are local research material, not Communion dependencies. The original SillyTavern installation and its own dependencies/data live under `tools/`. They are excluded from Git. Removing them is optional and would not break Communion, but deleting `tools/SillyTavern` would also remove that separate installation's local conversations and credentials.
 
 **`docs/internal/`** holds private development notes, local evidence, and historical setup records. It is excluded from Git. The rest of `docs/` contains user/developer documentation intended for the public repository.
+
+## Shared AI writing policy
+
+`backend/writing_policy.py` composes the global instructions and checks generated prose. Every public gateway call uses that policy, including dialogue, memory, and narrator requests. Request budgeting includes the injected instructions. The gateway can request one revision for a punctuation violation and records the extra generation in diagnostics. It rejects a second violation instead of passing it to a publisher or memory writer. Changes during generation require a new-policy correction before acceptance.
+
+Narrator reports include a policy fingerprint, and cache keys include the narrator prompt and that fingerprint. Explicit report requests generate afresh by default. Scheduling is disabled by default and can be enabled globally or for one scene.
