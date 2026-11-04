@@ -11,6 +11,7 @@ interface SessionEventsOptions {
   pinned: MutableRefObject<boolean>;
   setNewCount: Dispatch<SetStateAction<number>>;
   setRecapBusy: Dispatch<SetStateAction<boolean>>;
+  setRecapError: Dispatch<SetStateAction<string>>;
   fail: (error: unknown) => void;
 }
 
@@ -25,6 +26,7 @@ export function useSessionEvents({
   eventCursor,
   setNewCount,
   setRecapBusy,
+  setRecapError,
   fail,
 }: SessionEventsOptions) {
   useEffect(() => {
@@ -58,7 +60,10 @@ export function useSessionEvents({
         extraTimer = setTimeout(loadExtras, 300);
         if (e.kind === "recap_finished") {
           setRecapBusy(false);
-          if (e.body.error) fail(new Error(e.body.error));
+          if (e.body.error) {
+            setRecapError(e.body.error);
+            fail(new Error(e.body.error));
+          }
         }
       }
     };

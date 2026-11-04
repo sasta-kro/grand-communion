@@ -27,7 +27,7 @@ Adding an interface language does not translate scenario names or descriptions, 
 
 ## Contextual help
 
-Hover a technical label or focus its question-mark control to show an explanation. Click or tap the question mark to keep it open. Escape dismisses help first; a second Escape can close the surrounding dialog. The bubble stays inside the viewport and outside scroll-container clipping. Inside a dialog it remains in the dialog's accessible content.
+Hover a technical label for the configured delay, or focus its question-mark control to show an explanation immediately. Hover defaults to 0.6 seconds. **Settings > Interface** accepts any positive finite delay in seconds and saves it for the current browser. Moving away cancels a pending hover. Click or tap the question mark to keep it open. Escape dismisses help first; a second Escape can close the surrounding dialog. The bubble stays inside the viewport and outside scroll-container clipping. Inside a dialog it remains in the dialog's accessible content.
 
 Shared `Field` and `Checkbox` components keep the actual input label separate from the help control. Help controls do not change field values. `HelpLabel` can also annotate diagnostic terms. For an ordinary label, add a message-ID binding in `help-topics.json`. For formatted or context-dependent labels, pass an explicit translated `help` value.
 

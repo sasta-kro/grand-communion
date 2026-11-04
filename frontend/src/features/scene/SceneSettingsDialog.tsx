@@ -1,4 +1,4 @@
-import { Button, Field, Modal } from "../../components/ui";
+import { Button, Checkbox, Field, Modal } from "../../components/ui";
 import { tr } from "../../i18n";
 import { api } from "../../lib/api";
 import { SceneModel } from "./useSceneController";
@@ -14,6 +14,16 @@ export function SceneSettingsDialog({ model }: { model: SceneModel }) {
           subtitle={tr("sceneSettings.changesApplyToThisWorldResumingAfterA")}
           onClose={() => setSceneConfig(null)}
         >
+          <Checkbox
+            label={tr("sceneSettings.scheduleNarrator")}
+            checked={!!sceneConfig.narrator_enabled}
+            onChange={(event) =>
+              setSceneConfig({
+                ...sceneConfig,
+                narrator_enabled: event.target.checked,
+              })
+            }
+          />
           <div className="form-grid">
             {[
               ["cooldown", tr("settings.characterCooldown")],

@@ -79,6 +79,7 @@ export interface LogRecord {
   at: number;
 }
 export interface RecapRecord {
+  current_policy?: boolean;
   id: string;
   created: number;
   after_id: number;

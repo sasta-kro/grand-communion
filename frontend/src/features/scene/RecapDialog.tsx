@@ -16,6 +16,8 @@ export function RecapDialog({ model }: { model: SceneModel }) {
     scope,
     setScope,
     recapBusy,
+    recapError,
+    setRecapError,
     setRecapBusy,
     since,
     focus,
@@ -30,6 +32,11 @@ export function RecapDialog({ model }: { model: SceneModel }) {
           wide
           onClose={() => setRecapOpen(false)}
         >
+          {recapError && (
+            <p className="alert" role="alert">
+              {recapError}
+            </p>
+          )}
           <div className="recap-controls">
             <select
               aria-label={tr("recaps.narratorAccess")}
@@ -44,13 +51,17 @@ export function RecapDialog({ model }: { model: SceneModel }) {
             <Button
               disabled={recapBusy}
               onClick={async () => {
+                setRecapError("");
+                setRecapBusy(true);
                 try {
                   await api(`/sessions/${id}/recaps`, "POST", {
                     after_id: since.current,
                     scope,
+                    force: true,
                   });
-                  setRecapBusy(true);
                 } catch (e) {
+                  setRecapBusy(false);
+                  setRecapError(e instanceof Error ? e.message : String(e));
                   fail(e);
                 }
               }}
@@ -61,13 +72,17 @@ export function RecapDialog({ model }: { model: SceneModel }) {
               primary
               disabled={recapBusy}
               onClick={async () => {
+                setRecapError("");
+                setRecapBusy(true);
                 try {
                   await api(`/sessions/${id}/recaps`, "POST", {
                     after_id: 0,
                     scope,
+                    force: true,
                   });
-                  setRecapBusy(true);
                 } catch (e) {
+                  setRecapBusy(false);
+                  setRecapError(e instanceof Error ? e.message : String(e));
                   fail(e);
                 }
               }}
@@ -86,6 +101,9 @@ export function RecapDialog({ model }: { model: SceneModel }) {
           )}
           {recaps.map((r) => (
             <article className="recap" key={r.id}>
+              {r.current_policy === false && (
+                <p className="info-box">{tr("recaps.previousWritingRules")}</p>
+              )}
               <div className="row between">
                 <span className="eyebrow">{date(r.created)}</span>
                 <span className="quiet tiny">

@@ -23,6 +23,7 @@ export function useSceneController({
   notify,
 }: ScenePageProps) {
   const [loadError, setLoadError] = useState("");
+  const [recapError, setRecapError] = useState("");
   const [scene, setScene] = useState<SceneData | null>(null),
     [requests, setRequests] = useState<RequestRecord[]>([]),
     [logs, setLogs] = useState<LogRecord[]>([]),
@@ -135,6 +136,7 @@ export function useSceneController({
     eventCursor,
     setNewCount,
     setRecapBusy,
+    setRecapError,
     fail,
   });
   const transcriptReady = useTranscriptPosition({
@@ -241,6 +243,8 @@ export function useSceneController({
     : 0;
 
   return {
+    recapError,
+    setRecapError,
     transcriptReady,
     detailError,
     detailLoading,

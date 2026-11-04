@@ -1,3 +1,4 @@
+import { useTooltipDelay, scheduleTooltip } from "../lib/interfacePreferences";
 import { CircleHelp } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -17,6 +18,8 @@ export function HelpLabel({
   labelFor?: string;
 }) {
   const content = help || helpForLabel(label);
+  const hoverDelay = useTooltipDelay();
+  const cancelHover = useRef<(() => void) | undefined>(undefined);
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const bubble = useRef<HTMLDivElement>(null);
@@ -27,14 +30,28 @@ export function HelpLabel({
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ left: 12, top: 12 });
   const show = () => {
+    cancelHover.current?.();
     clearTimeout(closeTimer.current);
     setOpen(true);
   };
+  const hover = () => {
+    clearTimeout(closeTimer.current);
+    cancelHover.current?.();
+    if (!open)
+      cancelHover.current = scheduleTooltip(() => setOpen(true), hoverDelay);
+  };
   const hide = () => {
+    cancelHover.current?.();
     if (!pinned.current)
       closeTimer.current = setTimeout(() => setOpen(false), 150);
   };
-  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(closeTimer.current);
+      cancelHover.current?.();
+    },
+    [],
+  );
   useLayoutEffect(() => {
     if (!open || !content) return;
     const place = () => {
@@ -90,7 +107,7 @@ export function HelpLabel({
     <span
       ref={anchor}
       className="help-label"
-      onMouseEnter={show}
+      onMouseEnter={hover}
       onMouseLeave={hide}
       onFocus={show}
       onBlur={() => {
@@ -116,6 +133,7 @@ export function HelpLabel({
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
+            cancelHover.current?.();
             clearTimeout(closeTimer.current);
             pinned.current = !pinned.current;
             setOpen(pinned.current);
@@ -124,6 +142,7 @@ export function HelpLabel({
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
               event.stopPropagation();
+              cancelHover.current?.();
               clearTimeout(closeTimer.current);
               pinned.current = !pinned.current;
               setOpen(pinned.current);

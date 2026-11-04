@@ -1,12 +1,49 @@
+import { useState } from "react";
+import {
+  useTooltipDelay,
+  setTooltipDelay,
+} from "../../lib/interfacePreferences";
 import { useTranslation } from "react-i18next";
 import { Field } from "../../components/ui";
 import { changeInterfaceLanguage, interfaceLanguages, tr } from "../../i18n";
 
 export function InterfaceSettings() {
   const { i18n } = useTranslation();
+  const delay = useTooltipDelay();
+  const [draft, setDraft] = useState(String(delay));
+  const [invalid, setInvalid] = useState(false);
   return (
     <>
       <h2>{tr("settings.tab.interface")}</h2>
+      <Field
+        label={tr("settings.interface.tooltipDelay")}
+        hint={
+          invalid
+            ? tr("settings.interface.positiveDelay")
+            : tr("settings.interface.tooltipDelayHint")
+        }
+      >
+        <input
+          type="number"
+          min="0"
+          step="any"
+          value={draft}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            const number = Number(event.target.value);
+            if (number > 0 && Number.isFinite(number)) {
+              setTooltipDelay(number);
+              setInvalid(false);
+            }
+          }}
+          onBlur={() => {
+            if (!(Number(draft) > 0) || !Number.isFinite(Number(draft))) {
+              setInvalid(true);
+              setDraft(String(delay));
+            }
+          }}
+        />
+      </Field>
       <p>{tr("settings.interfaceDescription")}</p>
       <Field
         label={tr("settings.interfaceLanguage")}

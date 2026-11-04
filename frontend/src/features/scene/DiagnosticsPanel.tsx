@@ -309,6 +309,15 @@ export function DiagnosticsPanel({ model }: { model: SceneModel }) {
                     )}
                     <dl>
                       <dt>
+                        <HelpLabel
+                          label={tr("diagnostics.writingCorrections")}
+                        />
+                      </dt>
+                      <dd>
+                        {detail.metrics.policy_retries ??
+                          tr("common.notRecorded")}
+                      </dd>
+                      <dt>
                         <HelpLabel label={tr("diagnostics.status")} />
                       </dt>
                       <dd>
