@@ -46,6 +46,12 @@ export interface SessionSummary {
   character_count: number;
   message_count: number;
 }
+export interface ReplyExcerpt {
+  id: number;
+  name: string;
+  text: string;
+  truncated?: boolean;
+}
 export interface BoardMessage {
   id: number;
   author_id: string | null;
@@ -54,6 +60,7 @@ export interface BoardMessage {
   at: number;
   addressees: string[];
   reply_to: number | null;
+  reply_preview?: ReplyExcerpt | null;
   request_id: string;
   part: number;
   parts: number;

@@ -3,15 +3,38 @@ import { tr } from "../../i18n";
 import { stamp } from "../../lib/format";
 import { BoardMessage, Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
+import { ReplyPreview } from "./ReplyPreview";
 
 export function Message({ model, m }: { model: SceneModel; m: BoardMessage }) {
-  const { scene, setDiagnostics, setTab, setReply, setEdit, setReqId, focus } =
-    model;
+  const {
+    scene,
+    setDiagnostics,
+    setTab,
+    setReply,
+    setEdit,
+    setReqId,
+    focus,
+    messageById,
+    messageArrivals,
+    highlightedMessage,
+  } = model;
 
   const character = scene.characters.find((c) => c.id === m.author_id);
+  const arrived = messageArrivals.current.get(m.id);
   return (
     <>
-      <article className="message" id={"message-" + m.id} key={m.id}>
+      <article
+        className={
+          "message" +
+          (highlightedMessage === m.id ? " message-highlighted" : "")
+        }
+        id={"message-" + m.id}
+        data-arriving={
+          arrived !== undefined && performance.now() - arrived < 400
+            ? true
+            : undefined
+        }
+      >
         {character ? (
           <button
             className="avatar-button"
@@ -43,9 +66,11 @@ export function Message({ model, m }: { model: SceneModel; m: BoardMessage }) {
             </button>
           </div>
           {m.reply_to && (
-            <button className="reply-ref" onClick={() => focus(m.reply_to!)}>
-              {tr("chat.replyingTo2", { replyto: m.reply_to })}
-            </button>
+            <ReplyPreview
+              messageId={m.reply_to}
+              source={messageById.get(m.reply_to) || m.reply_preview}
+              onOpen={() => focus(m.reply_to!)}
+            />
           )}
           {m.addressees?.[0] !== "everyone" && (
             <div className="address">

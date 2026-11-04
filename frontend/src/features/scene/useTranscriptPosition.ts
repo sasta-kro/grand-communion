@@ -1,6 +1,14 @@
 import type { Virtualizer } from "@tanstack/react-virtual";
-import { useLayoutEffect, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import type { BoardMessage } from "../../lib/types";
+import { animateTranscriptEnd } from "../../lib/transcriptMotion";
 
 interface TranscriptPositionOptions {
   sceneReady: boolean;
@@ -10,6 +18,7 @@ interface TranscriptPositionOptions {
   pinned: RefObject<boolean>;
   pendingFocus: RefObject<number | null>;
   search: string;
+  focusVersion: number;
 }
 
 /** Position measured rows before showing the first frame. Never animate startup. */
@@ -21,16 +30,46 @@ export function useTranscriptPosition({
   pinned,
   pendingFocus,
   search,
+  focusVersion,
 }: TranscriptPositionOptions) {
   const [ready, setReady] = useState(false);
+  const lastMessage = useRef<number | undefined>(undefined);
+  const following = useRef(false);
+  const animation = useRef<(() => void) | undefined>(undefined);
+  const cancelFollow = useCallback(() => {
+    animation.current?.();
+    following.current = false;
+  }, []);
+  const followToEnd = useCallback(() => {
+    cancelFollow();
+    const element = scroll.current;
+    if (!element) return;
+    virtualizer.cancelScroll();
+    following.current = true;
+    animation.current = animateTranscriptEnd(
+      element,
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      () => {
+        following.current = false;
+      },
+    );
+  }, [cancelFollow, scroll, virtualizer]);
+  useEffect(() => cancelFollow, [cancelFollow]);
   const totalSize = virtualizer.getTotalSize();
   useLayoutEffect(() => {
     if (!sceneReady || !scroll.current) return;
+    const tail = filtered.at(-1)?.id;
+    const appended =
+      lastMessage.current !== undefined &&
+      tail !== undefined &&
+      tail > lastMessage.current;
+    lastMessage.current = tail;
     if (!filtered.length) {
       setReady(true);
       return;
     }
     if (pendingFocus.current !== null) {
+      cancelFollow();
       const index = filtered.findIndex(
         (message) => message.id === pendingFocus.current,
       );
@@ -42,11 +81,7 @@ export function useTranscriptPosition({
       return;
     }
     if (ready) {
-      if (pinned.current)
-        virtualizer.scrollToIndex(filtered.length - 1, {
-          align: "end",
-          behavior: "auto",
-        });
+      if (pinned.current && appended && !search) followToEnd();
       return;
     }
     let frame = 0;
@@ -79,6 +114,7 @@ export function useTranscriptPosition({
     totalSize,
     search,
     ready,
+    focusVersion,
   ]);
-  return ready;
+  return { transcriptReady: ready, following, cancelFollow, followToEnd };
 }

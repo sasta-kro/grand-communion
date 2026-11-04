@@ -47,6 +47,8 @@
   "chat.loadingLatest": "Loading latest messages...",
   "chat.messageAddressee": "Message addressee",
   "chat.newMessages": "new messages",
+  "chat.newMessages_one": "{{count}} new message",
+  "chat.newMessages_other": "{{count}} new messages",
   "chat.noMatchingMessages": "No matching messages",
   "chat.noMessagesYet": "No messages yet",
   "chat.onlyTheSelectedSpeakerIsShownToCharacters": "Only the selected speaker is shown to characters.",
@@ -459,5 +461,14 @@
   "settings.tab.prompts": "Prompts",
   "settings.tab.runtime": "Runtime",
   "settings.wordsPerPart": "Words per part",
-  "settings.workingContextCeiling": "Working context ceiling"
+  "settings.workingContextCeiling": "Working context ceiling",
+  "chat.openOriginalMessage": "Open message from {{name}} · #{{id}}",
+  "chat.openMessage": "Open message #{{id}}",
+  "chat.originalMessage": "Original message",
+  "chat.originalMessageNotLoaded": "Open the original message to read it.",
+  "chat.originalMessageUnavailable": "The original message is no longer available in this session.",
+  "chat.cancelReply": "Cancel reply",
+  "settings.interface.pauseAutoFollow": "Hold my position when reading older messages",
+  "settings.interface.pauseAutoFollowHint": "Off by default. New messages scroll into view. Turn this on to keep reading older history and use the new messages button to catch up.",
+  "help.pauseAutoFollow": "When enabled, scrolling away from the latest message pauses automatic following. New messages are counted below the transcript. Return to the bottom or select the new messages button to follow again. When disabled, incoming messages bring you back to the latest speech. Saved automatically for this browser."
 }

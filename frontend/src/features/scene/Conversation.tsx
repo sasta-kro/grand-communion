@@ -23,6 +23,10 @@ export function Conversation({ model }: { model: SceneModel }) {
     filtered,
     virtualizer,
     transcriptReady,
+    pauseAutoFollow,
+    following,
+    cancelFollow,
+    followToEnd,
   } = model;
 
   return (
@@ -39,7 +43,7 @@ export function Conversation({ model }: { model: SceneModel }) {
                   const rows = await api(
                     `/sessions/${id}/messages?before=${first - 1}&limit=200`,
                   );
-                  pinned.current = false;
+                  pinned.current = !pauseAutoFollow;
                   pendingFocus.current = first;
                   setScene({
                     ...scene,
@@ -80,24 +84,33 @@ export function Conversation({ model }: { model: SceneModel }) {
           tabIndex={0}
           aria-label={tr("chat.conversationTranscript")}
           onWheel={() => {
+            cancelFollow();
             manualScrollUntil.current = Date.now() + 1500;
           }}
           onTouchMove={() => {
+            cancelFollow();
             manualScrollUntil.current = Date.now() + 1500;
           }}
           onPointerDown={() => {
+            cancelFollow();
             manualScrollUntil.current = Date.now() + 1500;
           }}
           onKeyDown={() => {
+            cancelFollow();
             manualScrollUntil.current = Date.now() + 1500;
           }}
           onScroll={() => {
-            if (scroll.current && Date.now() < manualScrollUntil.current) {
+            if (
+              !following.current &&
+              scroll.current &&
+              Date.now() < manualScrollUntil.current
+            ) {
               pinned.current =
+                !pauseAutoFollow ||
                 scroll.current.scrollHeight -
                   scroll.current.scrollTop -
                   scroll.current.clientHeight <
-                100;
+                  100;
               if (pinned.current) setNewCount(0);
             }
           }}
@@ -150,13 +163,10 @@ export function Conversation({ model }: { model: SceneModel }) {
             onClick={() => {
               pinned.current = true;
               setNewCount(0);
-              virtualizer.scrollToIndex(filtered.length - 1, {
-                align: "end",
-              });
+              followToEnd();
             }}
           >
-            {newCount}
-            {tr("chat.newMessages")}
+            {tr("chat.newMessages", { count: newCount })}
             <ChevronDown size={14} />
           </button>
         )}

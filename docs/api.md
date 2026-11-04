@@ -82,6 +82,8 @@ The API retains the `speech_rules` field name for compatibility, but its scope i
 
 Request diagnostic metrics now record `http_status` as soon as provider response headers arrive. Missing status is not equivalent to HTTP 200. Cancellation metrics include `cancel_reason`, `cancelled_at`, `elapsed_ms`, and `published_parts`. Causes include `session_paused`, `settings_changed`, `cast_changed`, `server_shutdown`, and a generic `task_cancelled`. Recovery marks previously unfinished requests `interrupted` with `backend_restart`. Older records may lack these metrics; clients should show that absence explicitly.
 
+Session-detail and message-list responses include `reply_preview` for each message. It is either null or an object with the original public message's `id`, `name`, `text` (up to 260 characters), and `truncated` flag. References are resolved within the same session, even if the original falls outside the requested history page. These excerpts are UI metadata and do not change model context or stored messages.
+
 ## Future in-app assistant
 
 An assistant could use this API through a small set of tools for inspecting and editing scenarios, personas, characters, and settings. It would edit validated application data through the same service as the interface. It would not need to rewrite its own runtime code. Such an assistant is not included yet.

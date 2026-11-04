@@ -1,7 +1,8 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { tr } from "../../i18n";
 import { api } from "../../lib/api";
+import { usePauseAutoFollow } from "../../lib/interfacePreferences";
 import {
   BoardMessage,
   Data,
@@ -62,8 +63,30 @@ export function useSceneController({
     sceneRef = useRef<Data | null>(null),
     since = useRef(Number(localStorage.getItem("communion:seen:" + id) || 0));
   const pendingFocus = useRef<number | null>(null);
+  const [focusVersion, setFocusVersion] = useState(0);
+  const [highlightedMessage, setHighlightedMessage] = useState<number | null>(
+    null,
+  );
+  const messageArrivals = useRef(new Map<number, number>());
+  const messageById = useMemo(
+    () =>
+      new Map(scene?.messages.map((message) => [message.id, message]) || []),
+    [scene?.messages],
+  );
+  useEffect(() => {
+    if (highlightedMessage === null) return;
+    const timer = setTimeout(() => setHighlightedMessage(null), 2000);
+    return () => clearTimeout(timer);
+  }, [highlightedMessage, focusVersion]);
   const eventCursor = useRef(0);
   const manualScrollUntil = useRef(0);
+  const pauseAutoFollow = usePauseAutoFollow();
+  useEffect(() => {
+    if (!pauseAutoFollow) {
+      pinned.current = true;
+      setNewCount(0);
+    }
+  }, [pauseAutoFollow]);
   const filtered: BoardMessage[] = scene
     ? scene.messages.filter(
         (m: Data) =>
@@ -81,6 +104,17 @@ export function useSceneController({
   const load = async () => {
     try {
       const s = await api<SceneData>("/sessions/" + id);
+      if (sceneRef.current) {
+        const now = performance.now();
+        for (const [messageId, arrival] of messageArrivals.current)
+          if (now - arrival >= 400) messageArrivals.current.delete(messageId);
+        for (const message of s.messages)
+          if (
+            message.id > cutoff.current &&
+            !messageArrivals.current.has(message.id)
+          )
+            messageArrivals.current.set(message.id, now);
+      }
       setLoadError("");
       setScene((old) => {
         if (old)
@@ -139,15 +173,17 @@ export function useSceneController({
     setRecapError,
     fail,
   });
-  const transcriptReady = useTranscriptPosition({
-    sceneReady: !!scene,
-    filtered,
-    virtualizer,
-    scroll,
-    pinned,
-    pendingFocus,
-    search,
-  });
+  const { transcriptReady, following, cancelFollow, followToEnd } =
+    useTranscriptPosition({
+      sceneReady: !!scene,
+      filtered,
+      virtualizer,
+      scroll,
+      pinned,
+      pendingFocus,
+      search,
+      focusVersion,
+    });
   const action = async (path: string) => {
     try {
       await api(`/sessions/${id}/${path}`, "POST");
@@ -158,34 +194,40 @@ export function useSceneController({
     }
   };
   const focus = async (messageId: number) => {
-    pinned.current = false;
-    pendingFocus.current = messageId;
-    setSearch("");
-    if (!scene?.messages.some((m: Data) => m.id === messageId)) {
-      const m = await api(
-        `/sessions/${id}/messages?after=${Math.max(0, messageId - 5)}&limit=15`,
-      );
-      setScene((s) =>
-        s
-          ? {
-              ...s,
-              messages: [
-                ...new Map(
-                  [...s.messages, ...m].map((x: BoardMessage) => [x.id, x]),
-                ).values(),
-              ].sort((a, b) => a.id - b.id),
-            }
-          : s,
-      );
-    }
-    setRecapOpen(false);
-    setTimeout(() => {
-      const index = filtered.findIndex((m) => m.id === messageId);
-      if (index >= 0) {
-        virtualizer.scrollToIndex(index, { align: "center" });
-        pendingFocus.current = null;
+    try {
+      if (!messageById.has(messageId)) {
+        const messages = await api<BoardMessage[]>(
+          `/sessions/${id}/messages?before=${messageId}&limit=15`,
+        );
+        if (!messages.some((message) => message.id === messageId)) {
+          notify(tr("chat.originalMessageUnavailable"));
+          return;
+        }
+        setScene((s) =>
+          s
+            ? {
+                ...s,
+                messages: [
+                  ...new Map(
+                    [...s.messages, ...messages].map((message) => [
+                      message.id,
+                      message,
+                    ]),
+                  ).values(),
+                ].sort((a, b) => a.id - b.id),
+              }
+            : s,
+        );
       }
-    }, 80);
+      pinned.current = !pauseAutoFollow;
+      pendingFocus.current = messageId;
+      setSearch("");
+      setRecapOpen(false);
+      setHighlightedMessage(messageId);
+      setFocusVersion((version) => version + 1);
+    } catch (error) {
+      fail(error);
+    }
   };
   const send = async () => {
     if (!text.trim()) return;
@@ -246,6 +288,13 @@ export function useSceneController({
     recapError,
     setRecapError,
     transcriptReady,
+    following,
+    cancelFollow,
+    followToEnd,
+    pauseAutoFollow,
+    messageById,
+    messageArrivals,
+    highlightedMessage,
     detailError,
     detailLoading,
     retryDetail,

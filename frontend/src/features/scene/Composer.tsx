@@ -4,6 +4,7 @@ import { Field } from "../../components/ui";
 import { tr } from "../../i18n";
 import { Data } from "../../lib/types";
 import { SceneModel } from "./useSceneController";
+import { ReplyPreview } from "./ReplyPreview";
 
 export function Composer({ model }: { model: SceneModel }) {
   const {
@@ -20,6 +21,7 @@ export function Composer({ model }: { model: SceneModel }) {
     setReply,
     sending,
     send,
+    focus,
   } = model;
 
   return (
@@ -27,8 +29,16 @@ export function Composer({ model }: { model: SceneModel }) {
       <div className="composer">
         {reply && (
           <div className="replying">
-            {tr("chat.replyingToMessage", { name: reply.name, id: reply.id })}
-            <button className="icon" onClick={() => setReply(null)}>
+            <ReplyPreview
+              messageId={reply.id}
+              source={reply}
+              onOpen={() => focus(reply.id)}
+            />
+            <button
+              className="icon"
+              aria-label={tr("chat.cancelReply")}
+              onClick={() => setReply(null)}
+            >
               <X size={13} />
             </button>
           </div>

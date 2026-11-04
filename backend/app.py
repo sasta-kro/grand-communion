@@ -32,6 +32,32 @@ from .writing_policy import WritingPolicy
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def transcript_messages(store, session_id, rows):
+    """Attach bounded public reply excerpts without loading older history in the UI."""
+    targets = {row["reply_to"] for row in rows if row.get("reply_to")}
+    references = {}
+    if targets:
+        placeholders = ",".join("?" for _ in targets)
+        references = {
+            row["id"]: {
+                "id": row["id"],
+                "name": row["name"],
+                "text": row["text"][:260],
+                "truncated": len(row["text"]) > 260,
+            }
+            for row in store.query(
+                f"SELECT id,name,text FROM messages WHERE session_id=? AND id IN ({placeholders})",
+                (session_id, *targets),
+            )
+        }
+    for row in rows:
+        if isinstance(row["addressees"], str):
+            row["addressees"] = json.loads(row["addressees"])
+        row.pop("controller", None)
+        row["reply_preview"] = references.get(row.get("reply_to"))
+    return rows
+
+
 def create_app(data_dir=None):
     @asynccontextmanager
     async def lifespan(app):
@@ -204,13 +230,10 @@ def create_app(data_dir=None):
             (id,),
         )
         latest.reverse()
-        for m in latest:
-            m["addressees"] = json.loads(m["addressees"])
-            m.pop("controller", None)
         return {
             **session,
             "characters": chars,
-            "messages": latest,
+            "messages": transcript_messages(store, id, latest),
             "cutoff": store.cutoff(id),
             "event_cursor": store.one(
                 "SELECT COALESCE(MAX(id),0) AS id FROM events WHERE session_id=?", (id,)
@@ -233,9 +256,7 @@ def create_app(data_dir=None):
                 m["addressees"] = json.loads(m["addressees"])
         else:
             rows = app.state.store.messages(id, after, before, min(1000, max(1, limit)))
-        for m in rows:
-            m.pop("controller", None)
-        return rows
+        return transcript_messages(app.state.store, id, rows)
 
     @app.post("/api/sessions/{id}/start")
     async def start(id: str):

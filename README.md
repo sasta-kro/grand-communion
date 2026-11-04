@@ -123,7 +123,7 @@ For a complete filesystem backup, stop Communion before copying `data/`. Alterna
 
 ## Diagnostics
 
-The transcript virtualizes long conversations so only visible message rows are rendered. Earlier history can be loaded on demand, and new speech does not move the view while you are reading older messages.
+The transcript virtualizes long conversations so only visible message rows are rendered. Messages have distinct bubbles and clickable reply excerpts, including replies to speech outside the loaded history. Opening a chat positions it immediately at the end. New speech moves into view smoothly, with reduced-motion preferences respected. Enable **Settings > Interface > Hold my position when reading older messages** to pause automatic following while reading history. This browser preference is off by default.
 
 The side pane includes current activity, latency history, recent outcomes, estimated per-character context pressure, individual request inspection, provider reasoning, and filtered DEBUG/INFO/WARNING/ERROR logs. Request details distinguish queue delay, first token, reasoning time, total duration, usage, retries, HTTP failures, and output finish reasons.
 

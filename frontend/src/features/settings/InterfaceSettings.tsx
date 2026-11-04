@@ -2,14 +2,17 @@ import { useState } from "react";
 import {
   useTooltipDelay,
   setTooltipDelay,
+  usePauseAutoFollow,
+  setPauseAutoFollow,
 } from "../../lib/interfacePreferences";
 import { useTranslation } from "react-i18next";
-import { Field } from "../../components/ui";
+import { Checkbox, Field } from "../../components/ui";
 import { changeInterfaceLanguage, interfaceLanguages, tr } from "../../i18n";
 
 export function InterfaceSettings() {
   const { i18n } = useTranslation();
   const delay = useTooltipDelay();
+  const pauseAutoFollow = usePauseAutoFollow();
   const [draft, setDraft] = useState(String(delay));
   const [invalid, setInvalid] = useState(false);
   return (
@@ -44,6 +47,12 @@ export function InterfaceSettings() {
           }}
         />
       </Field>
+      <Checkbox
+        checked={pauseAutoFollow}
+        onChange={(event) => setPauseAutoFollow(event.target.checked)}
+        label={tr("settings.interface.pauseAutoFollow")}
+      />
+      <p className="hint">{tr("settings.interface.pauseAutoFollowHint")}</p>
       <p>{tr("settings.interfaceDescription")}</p>
       <Field
         label={tr("settings.interfaceLanguage")}

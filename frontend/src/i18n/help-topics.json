@@ -106,5 +106,6 @@
   "settings.runtime.characterRequestSlots": "help.characterSlots",
   "settings.runtime.totalRequestConcurrency": "help.requestConcurrency",
   "settings.wordsPerPart": "help.wordsPerPart",
-  "settings.workingContextCeiling": "help.workingContext"
+  "settings.workingContextCeiling": "help.workingContext",
+  "settings.interface.pauseAutoFollow": "help.pauseAutoFollow"
 }

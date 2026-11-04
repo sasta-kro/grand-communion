@@ -282,6 +282,55 @@ async def test_api_and_history_pagination(app):
         ).status_code == 400
 
 
+async def test_reply_previews_cross_history_boundaries_without_crossing_sessions(app):
+    store, engine = app.state.store, app.state.engine
+    id = make_session(app)
+    other = make_session(app)
+    session = store.session(id)
+    original = "A long original message " * 18
+    first = store.publish(
+        id, session["epoch"],
+        {"name": "Mara", "text": original, "request_id": uid()},
+    )
+    for index in range(201):
+        store.publish(
+            id, session["epoch"],
+            {"name": "Bystander", "text": f"Observation {index}", "request_id": uid()},
+        )
+    await engine.inject(
+        session,
+        Injection(name="Iven", text="I remember those words.", reply_to=first),
+    )
+    foreign = store.publish(
+        other, store.session(other)["epoch"],
+        {"name": "Private other world", "text": "Do not expose this.", "request_id": uid()},
+    )
+    # A damaged imported reference must not expose another world's speech.
+    store.publish(
+        id, session["epoch"],
+        {
+            "name": "Bystander", "text": "Broken reference",
+            "reply_to": foreign, "request_id": uid(),
+        },
+    )
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://testserver"
+    ) as client:
+        scene = (await client.get(f"/api/sessions/{id}")).json()
+        assert first not in {m["id"] for m in scene["messages"]}
+        reply = scene["messages"][-2]
+        assert reply["reply_preview"] == {
+            "id": first, "name": "Mara", "text": original[:260], "truncated": True,
+        }
+        rows = (
+            await client.get(f"/api/sessions/{id}/messages?after={reply['id'] - 1}")
+        ).json()
+        assert rows[0]["reply_preview"] == reply["reply_preview"]
+        assert rows[-1]["reply_preview"] is None
+        assert "controller" not in reply
+        assert "reply_preview" not in public_message(store.messages(id)[-2])
+
+
 def test_mechanical_split_bounds_each_part():
     parts = split_speech(
         "One two three four five six seven eight. Nine ten eleven twelve.", 5, 3

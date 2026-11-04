@@ -229,8 +229,11 @@
     font-size: 11px;
   }
   .message {
-    gap: 11px;
-    padding: 17px 0;
+    gap: 8px;
+    padding: 7px 0;
+  }
+  .message-content {
+    padding: 10px 12px 12px;
   }
   .message-header {
     gap: 7px;
