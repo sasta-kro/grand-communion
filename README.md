@@ -18,6 +18,15 @@ Open [Communion](http://127.0.0.1:8010). The backend serves the built interface 
 python3 scripts/stop-communion.py
 ```
 
+To choose a different port, pass it to the launcher:
+
+```sh
+./scripts/start-communion.sh 8020
+# Equivalent: ./scripts/start-communion.sh --port 8020
+```
+
+Then open `http://127.0.0.1:8020`. With no argument, the port defaults to 8010, or `COMMUNION_PORT` if set. An explicit argument takes precedence over the environment variable. Both Ctrl-C and the stop script stop the actual running instance and release its port. The stop script needs no port argument. Stop the current instance before changing ports.
+
 The setup instance writes to `.local/communion.log`. The launcher uses a bounded graceful shutdown so an open event stream cannot hold the server indefinitely. To follow that log:
 
 ```sh
